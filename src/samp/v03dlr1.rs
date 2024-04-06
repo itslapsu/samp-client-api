@@ -12,7 +12,7 @@ pub const CGAME: usize = 0x2ACA3C;
 pub const CGAME_SETCURSORMODE: usize = 0xA0530;
 pub const CGAME_PROCESSINPUTENABLING: usize = 0xA0410;
 pub const CDIALOG: usize = 0x2AC9E0;
-pub const CDEATHWINDOW_DRAW: usize = 0x66640; // Unchanged
+pub const CDEATHWINDOW_DRAW: usize = 0x69B70;
 
 const SPEC_MODE_VEHICLE: i8 = 3;
 const SPEC_MODE_PLAYER: i8 = 4;
