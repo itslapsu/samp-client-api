@@ -27,18 +27,18 @@ impl<'a> Object<'a> {
         }
     }
 
-    fn new_dl(object: &'a dl::CObject) -> Object<'a> {
+    fn new_dl(object: &'a r3::CObject) -> Object<'a> {
         Object {
-            object_dl: None,
+            object_v3: Some(object),
             object_v1: None,
-            object_v3: Some(object)
+            object_dl: None,
         }
     }
 
     pub fn entity(&self) -> Option<&'a mut CObject> {
         let v1 = self.object_v1.map(|obj| obj._base.m_pGameEntity as *mut CObject);
         let v3 = self.object_v3.map(|obj| obj._base.m_pGameEntity as *mut CObject);
-        let dl = self.object_dl.map(|obj| obj._base.m_pGameEntity as *mut CObject);
+        let dl = self.object_v3.map(|obj| obj._base.m_pGameEntity as *mut CObject);
 
         dl.or(v3).or(v1)
             .filter(|ptr| !ptr.is_null())
