@@ -7,7 +7,7 @@ use crate::gta::matrix::CVector;
 pub struct Object<'a> {
     object_v1: Option<&'a r1::CObject>,
     object_v3: Option<&'a r3::CObject>,
-    object_dl: Option<&'a dl::CObject>,
+    object_dl: Option<&'a r3::CObject>,
 }
 
 impl<'a> Object<'a> {
@@ -31,7 +31,7 @@ impl<'a> Object<'a> {
         Object {
             object_dl: None,
             object_v1: None,
-            object_v3: Some(object),
+            object_v3: Some(object)
         }
     }
 
