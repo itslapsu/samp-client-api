@@ -30,7 +30,7 @@ impl Input {
         let input_addr = match version() {
             Version::V037 => super::v037::CINPUT,
             Version::V037R3 => super::v037r3::CINPUT,
-            Version::V03DLR1 => super::v03dlr1::CINPUT,
+            Version::V03DL => super::v03dl::CINPUT,
             _ => return None,
         };
 
@@ -82,7 +82,7 @@ impl Dialog {
         let dialog_addr = match version() {
             Version::V037 => super::v037::CDIALOG,
             Version::V037R3 => super::v037r3::CDIALOG,
-            Version::V03DLR1 => super::v03dlr1::CDIALOG,
+            Version::V03DL => super::v03dl::CDIALOG,
             _ => return None,
         };
 
@@ -125,21 +125,21 @@ pub fn show_cursor(show: bool) {
         let cgame_addr = match version() {
             Version::V037 => super::v037::CGAME,
             Version::V037R3 => super::v037r3::CGAME,
-            Version::V03DLR1 => super::v03dlr1::CGAME,
+            Version::V03DL => super::v03dl::CGAME,
             _ => return,
         };
 
         let setcursor_addr = match version() {
             Version::V037 => super::v037::CGAME_SETCURSORMODE,
             Version::V037R3 => super::v037r3::CGAME_SETCURSORMODE,
-            Version::V03DLR1 => super::v03dlr1::CGAME_SETCURSORMODE,
+            Version::V03DL => super::v03dl::CGAME_SETCURSORMODE,
             _ => return,
         };
 
         let process_addr = match version() {
             Version::V037 => super::v037::CGAME_PROCESSINPUTENABLING,
             Version::V037R3 => super::v037r3::CGAME_PROCESSINPUTENABLING,
-            Version::V03DLR1 => super::v03dlr1::CGAME_PROCESSINPUTENABLING,
+            Version::V03DL => super::v03dl::CGAME_PROCESSINPUTENABLING,
             _ => return,
         };
 

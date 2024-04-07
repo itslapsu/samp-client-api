@@ -26,7 +26,6 @@ impl SpawnScreen {
         let address = match version() {
             Version::V037 => 0x6C9B0,
             Version::V037R3 => 0x708A0,
-            Version::V03DLR1 => 0x70A30,
             _ => return,
         };
 
