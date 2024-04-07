@@ -92,6 +92,19 @@ impl From<v037::Gamestate> for Gamestate {
     }
 }
 
+impl From<v03dlr1::Gamestate> for Gamestate {
+    fn from(state: v03dlr1::Gamestate) -> Gamestate {
+        match state {
+            v03dlr1::Gamestate::None => Gamestate::None,
+            v03dlr1::Gamestate::WaitConnect => Gamestate::WaitConnect,
+            v03dlr1::Gamestate::Connecting => Gamestate::Connecting,
+            v03dlr1::Gamestate::Connected => Gamestate::Connected,
+            v03dlr1::Gamestate::AwaitJoin => Gamestate::AwaitJoin,
+            v03dlr1::Gamestate::Restarting => Gamestate::Restarting,
+        }
+    }
+}
+
 pub fn gamestate() -> Gamestate {
     match version() {
         Version::V037 => v037::CNetGame::get()
@@ -99,6 +112,10 @@ pub fn gamestate() -> Gamestate {
             .unwrap_or(Gamestate::None),
 
         Version::V037R3 => v037r3::CNetGame::get()
+            .map(|netgame| netgame.gamestate().into())
+            .unwrap_or(Gamestate::None),
+
+        Version::V03DLR1 => v03dlr1::CNetGame::get()
             .map(|netgame| netgame.gamestate().into())
             .unwrap_or(Gamestate::None),
 
