@@ -85,6 +85,14 @@ impl CNetGame {
     }
 }
 
+pub struct CPlayerPool {
+    pub m_nLargestId: std::os::raw::c_int,
+    pub m_localInfo: CPlayerPool_Local,
+    pub m_pObject: [*mut CPlayerInfo; 1004],
+    pub m_bNotEmpty: [BOOL; 1004],
+    pub m_bPrevCollisionFlag: [BOOL; 1004],
+}
+
 #[repr(C, packed)]
 pub struct CNetGame_Pools {
     pub m_pMenu: *mut (),
