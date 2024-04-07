@@ -1,4 +1,4 @@
-use super::{v037r3 as r3, v037 as r1, v03dlr1 as dl};
+use super::{v037r3 as r3, v037 as r1, v03dl as dl};
 use super::version::{Version, version};
 
 use crate::gta::object::CObject;
@@ -30,8 +30,8 @@ impl<'a> Object<'a> {
     fn new_dl(object: &'a dl::CObject) -> Object<'a> {
         Object {
             object_dl: Some(object),
-            object_v1: None,
             object_v3: None,
+            object_v1: None,
         }
     }
 
@@ -40,7 +40,7 @@ impl<'a> Object<'a> {
         let v3 = self.object_v3.map(|obj| obj._base.m_pGameEntity as *mut CObject);
         let dl = self.object_dl.map(|obj| obj._base.m_pGameEntity as *mut CObject);
 
-        dl.or(v3).or(v1)
+        v1.or(v3).or(dl)
             .filter(|ptr| !ptr.is_null())
             .map(|ptr| unsafe { &mut *ptr })
     }
@@ -69,7 +69,7 @@ impl<'a> Object<'a> {
         match version() {
             Version::V037 => r1::find_object(object_id).map(|obj| Object::new_v1(obj)),
             Version::V037R3 => r3::find_object(object_id).map(|obj| Object::new_v3(obj)),
-            Version::V03DLR1 => dl::find_object(object_id).map(|obj| Object::new_dl(obj)),
+            Version::V03DL => dl::find_object(object_id).map(|obj| Object::new_dl(obj)),
             _ => None,
         }
     }
