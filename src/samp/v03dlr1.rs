@@ -12,7 +12,7 @@ pub const CGAME: usize = 0x2ACA3C;
 pub const CGAME_SETCURSORMODE: usize = 0xA0530;
 pub const CGAME_PROCESSINPUTENABLING: usize = 0xA0410;
 pub const CDIALOG: usize = 0x2AC9E0;
-pub const CDEATHWINDOW_DRAW: usize = 0x66640; // Unchanged
+pub const CDEATHWINDOW_DRAW: usize = 0x6A2E0; // Unchanged
 
 const SPEC_MODE_VEHICLE: i8 = 3;
 const SPEC_MODE_PLAYER: i8 = 4;
@@ -32,11 +32,11 @@ pub enum Gamestate {
 impl From<i32> for Gamestate {
     fn from(state: i32) -> Gamestate {
         match state {
-            1 => Gamestate::WaitConnect,
-            2 => Gamestate::Connecting,
-            6 => Gamestate::AwaitJoin,
-            5 => Gamestate::Connected,
-            11 => Gamestate::Restarting,
+            0x1 => Gamestate::WaitConnect,
+            0x2 => Gamestate::Connecting,
+            0x6 => Gamestate::AwaitJoin,
+            0x5 => Gamestate::Connected,
+            0xB => Gamestate::Restarting,
             _ => Gamestate::None,
         }
     }
@@ -57,7 +57,7 @@ pub struct CNetGame {
     pub m_nGameState: ::std::os::raw::c_int,
     pub m_lastConnectAttempt: TICK,
     pub m_pSettings: *mut (),
-    pub pad_3: [::std::os::raw::c_char; 5usize],
+    pub pad_2: [::std::os::raw::c_char; 5usize],
     pub m_pPools: *mut CNetGame_Pools,
 }
 
@@ -85,7 +85,12 @@ impl CNetGame {
     }
 }
 
-#[repr(C, packed)]
+extern "thiscall" {
+    fn GetObjectPoolAddress(offset: usize) -> *mut CObjectPool;
+    fn GetObjectPoolAddress(offset: usize) -> *mut CVehiclePool;
+    fn GetPlayerPoolAddress(offset: usize) -> *mut CPlayerPool;
+}
+
 pub struct CNetGame_Pools {
     pub m_pMenu: *mut (),
     pub m_pActor: *mut (),
@@ -98,8 +103,25 @@ pub struct CNetGame_Pools {
     pub m_pTextDraw: *mut (),
 }
 
+impl CNetGame_Pools {
+    pub fn new() -> Self {
+        Self {
+            m_pMenu: std::ptr::null_mut(),
+            m_pActor: std::ptr::null_mut(),
+            m_pPlayer: unsafe { GetPlayerPoolAddress(0x1170) },
+            m_pVehicle: unsafe { GetPlayerPoolAddress(0x1180) },
+            m_pPickup: std::ptr::null_mut(),
+            m_pObject: unsafe { GetObjectPoolAddress(0x2E40) }, 
+            m_pGangZone: std::ptr::null_mut(),
+            m_pLabel: std::ptr::null_mut(),
+            m_pTextDraw: std::ptr::null_mut(),
+        }
+    }
+}
+
 #[repr(C, packed)]
 pub struct CPlayerPool {
+    pub m_szLocalPlayerName: CStdString,
     pub m_nLargestId: ::std::os::raw::c_int,
     pub m_pObject: [*mut CPlayerInfo; 1004usize],
     pub m_bNotEmpty: [BOOL; 1004usize],
@@ -109,8 +131,9 @@ pub struct CPlayerPool {
 
 #[repr(C, packed)]
 pub struct CPlayerPool__bindgen_ty_1 {
-    pub m_nPing: ::std::os::raw::c_int,
-    pub m_nScore: ::std::os::raw::c_int,
+    pub m_nLocalPlayerPing: ::std::os::raw::c_int,
+    pub m_nLocalPlayerScore: ::std::os::raw::c_int,
+    pub m_nCurrentInterior: ::std::os::raw::c_int,
     pub m_nId: ID,
     pub __align: ::std::os::raw::c_int,
     pub m_szName: CStdString,
@@ -194,7 +217,7 @@ pub struct CRemotePlayer {
     pub m_pVehicle: *mut CVehicle, // CVehicle
     pub m_nId: ID,
     pub m_nVehicleId: ID,
-    pub field_1: ::std::os::raw::c_int,
+    pub field_14: ::std::os::raw::c_int,
     pub m_bDrawLabels: BOOL,
     pub m_bHasJetpack: BOOL,
     pub m_nSpecialAction: ::std::os::raw::c_uchar,
@@ -206,17 +229,17 @@ pub struct CRemotePlayer {
     pub m_nTeam: ::std::os::raw::c_uchar,
     pub m_nState: ::std::os::raw::c_uchar,
     pub m_nSeatId: ::std::os::raw::c_uchar,
-    pub field_3: ::std::os::raw::c_int,
+    pub field_1C: ::std::os::raw::c_int,
     pub m_bPassengerDriveBy: BOOL,
     pub m_onfootTargetPosition: CVector,
     pub m_onfootTargetSpeed: CVector,
     pub m_incarTargetPosition: CVector,
     pub m_incarTargetSpeed: CVector,
-    pub pad_1: [::std::os::raw::c_char; 76usize],
+    pub pad_114: [::std::os::raw::c_char; 76usize],
     pub m_positionDifference: CVector,
     pub m_incarTargetRotation: CRemotePlayer__bindgen_ty_1,
     pub m_fReportedArmour: f32,
-    pub m_fReportedHealth: f32,
+    pub pad_150: f32,
     pub pad_2: [::std::os::raw::c_char; 12usize],
     pub m_animation: Animation,
     pub m_nUpdateType: ::std::os::raw::c_uchar,
@@ -321,10 +344,10 @@ pub struct CLocalPlayer {
     pub m_nCurrentVehicle: ID,
     pub m_nLastVehicle: ID,
     pub m_animation: Animation,
-    pub field_1: ::std::os::raw::c_int,
+    pub field_104: ::std::os::raw::c_int,
     pub m_bDoesSpectating: BOOL,
     pub m_nTeam: NUMBER,
-    pub field_10d: ::std::os::raw::c_short,
+    pub field_131: ::std::os::raw::c_short,
     pub m_lastUpdate: TICK,
     pub m_lastSpecUpdate: TICK,
     pub m_lastAimUpdate: TICK,
@@ -463,7 +486,8 @@ pub struct CLocalPlayer__bindgen_ty_1 {
 pub struct CLocalPlayer_SpawnInfo {
     pub m_nTeam: NUMBER,
     pub m_nSkin: ::std::os::raw::c_int,
-    pub field_c: ::std::os::raw::c_char,
+    pub m_nCustomSkin: ::std::os::raw::c_int,
+    pub field_9: ::std::os::raw::c_char,
     pub m_position: CVector,
     pub m_fRotation: f32,
     pub m_aWeapon: [::std::os::raw::c_int; 3usize],
@@ -487,7 +511,7 @@ pub struct CLocalPlayer__bindgen_ty_3 {
     pub m_bStuck: BOOL,
     pub m_bIsActive: BOOL,
     pub m_position: CVector,
-    pub field_: ::std::os::raw::c_int,
+    pub field_1E: ::std::os::raw::c_int,
     pub m_nMode: ::std::os::raw::c_int,
 }
 
@@ -568,7 +592,7 @@ pub struct CVehicle {
     pub _base: CEntity,
     pub m_pTrailer: *mut CVehicle,
     pub m_pGameVehicle: *mut GamePed, // GTA::CVehicle
-    pub pad_50: [::std::os::raw::c_char; 8usize],
+    pub pad_5c: [::std::os::raw::c_char; 8usize],
     pub m_bIsInvulnerable: BOOL,
     pub m_bIsLightsOn: BOOL,
     pub m_bIsLocked: BOOL,
@@ -671,7 +695,7 @@ pub struct CObject {
     pub pad_1: ::std::os::raw::c_char,
     pub m_bDontCollideWithCamera: bool,
     pub m_fDrawDistance: f32,
-    pub field_0: f32,
+    pub field_58: f32,
     pub m_position: CVector,
     pub m_fDistanceToCamera: f32,
     pub m_bDrawLast: bool,
@@ -683,6 +707,7 @@ pub struct CObject {
     pub m_attachOffset: CVector,
     pub m_attachRotation: CVector,
     pub field_1: ::std::os::raw::c_char,
+    pub m_bSyncRotation: bool,
     pub m_targetMatrix: RwMatrix,
     pub pad_4: [::std::os::raw::c_char; 148usize],
     pub m_bMoving: ::std::os::raw::c_char,
@@ -712,6 +737,7 @@ pub struct CObject__bindgen_ty_1__bindgen_ty_2 {
     pub m_bTextureWasCreated: [BOOL; 16usize],
     pub m_textInfo: [CObject__bindgen_ty_1__bindgen_ty_2__bindgen_ty_1; 16usize],
     pub m_szData: [*mut ::std::os::raw::c_char; 16usize],
+    pub m_szText: [*mut ::std::os::raw::c_char; 16usize],
     pub m_pBackgroundTexture: [*mut (); 16usize], // IDirect3DTexture9
     pub m_pTexture: [*mut (); 16usize],           // IDirect3DTexture9
 }
@@ -825,7 +851,7 @@ pub fn object_pool() -> Option<&'static mut CObjectPool> {
 }
 
 pub fn find_object<'a>(object_id: i32) -> Option<&'a mut CObject> {
-    if object_id < 0 || object_id > 1000 {
+    if object_id < 0 || object_id > 60000 {
         return None;
     }
 
