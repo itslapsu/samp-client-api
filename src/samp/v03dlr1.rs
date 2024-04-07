@@ -841,7 +841,6 @@ pub fn find_object<'a>(object_id: i32) -> Option<&'a mut CObject> {
                 return None;
             }
             
-            println!("pools: objects.m_pObject[{:?}]", objects.m_pObject[object_id]);
             Some(&mut *objects.m_pObject[object_id])
         } else {
             None
@@ -862,9 +861,6 @@ fn pools() -> Option<&'static mut CNetGame_Pools> {
         }
 
         let pools = &mut *(*netgame).m_pPools;
-
-        println!("pools: {:?}", pools);
-
 
         Some(pools)
     }
