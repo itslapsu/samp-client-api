@@ -99,32 +99,25 @@ pub struct CNetGame_Pools {
 }
 
 #[repr(C, packed)]
-pub struct CPlayerPool {
-    pub m_nLargestId: ::std::os::raw::c_int,
-    pub m_pObject: [*mut CPlayerInfo; 1004usize],
-    pub m_bNotEmpty: [BOOL; 1004usize],
-    pub m_bPrevCollisionFlag: [BOOL; 1004usize],
-    pub m_localInfo: CPlayerPool__bindgen_ty_1,
-}
-
-#[repr(C, packed)]
-pub struct CPlayerPool__bindgen_ty_1 {
-    pub m_nPing: ::std::os::raw::c_int,
-    pub m_nScore: ::std::os::raw::c_int,
+#[derive(Debug)]
+pub struct CPlayerPool_Local {
     pub m_nId: ID,
-    pub __align: ::std::os::raw::c_int,
+    pub __align: std::os::raw::c_int,
     pub m_szName: CStdString,
     pub m_pObject: *mut CLocalPlayer,
+    pub m_nPing: std::os::raw::c_int,
+    pub m_nScore: std::os::raw::c_int,
 }
 
 #[repr(C, packed)]
+#[derive(Debug)]
 pub struct CPlayerInfo {
     pub m_pPlayer: *mut CRemotePlayer,
-    pub m_nPing: ::std::os::raw::c_int,
-    pub __aling: ::std::os::raw::c_int,
-    pub m_szNick: CStdString,
-    pub m_nScore: ::std::os::raw::c_int,
     pub m_bIsNPC: BOOL,
+    pub __aling: std::os::raw::c_uint,
+    pub m_szNick: CStdString,
+    pub m_nScore: std::os::raw::c_int,
+    pub m_nPing: std::os::raw::c_uint,
 }
 
 impl CPlayerInfo {
@@ -190,40 +183,41 @@ impl CPlayerInfo {
 
 #[repr(C, packed)]
 pub struct CRemotePlayer {
-    pub m_pPed: *mut CPed,         // CPed
-    pub m_pVehicle: *mut CVehicle, // CVehicle
-    pub m_nId: ID,
-    pub m_nVehicleId: ID,
-    pub field_1: ::std::os::raw::c_int,
-    pub m_bDrawLabels: BOOL,
-    pub m_bHasJetpack: BOOL,
-    pub m_nSpecialAction: ::std::os::raw::c_uchar,
-    pub m_incarData: packets::IncarData,
-    pub m_trailerData: packets::TrailerData,
-    pub m_aimData: packets::AimData,
-    pub m_passengerData: packets::PassengerData,
-    pub m_onfootData: packets::OnfootData,
-    pub m_nTeam: ::std::os::raw::c_uchar,
-    pub m_nState: ::std::os::raw::c_uchar,
-    pub m_nSeatId: ::std::os::raw::c_uchar,
-    pub field_3: ::std::os::raw::c_int,
+    pub m_pPed: *mut CPed,
+    pub m_pVehicle: *mut CVehicle,
+    pub m_nTeam: NUMBER,
+    pub m_nState: NUMBER,
+    pub m_nSeatId: NUMBER,
+    pub field_b: std::os::raw::c_int,
     pub m_bPassengerDriveBy: BOOL,
+    pub pad_13: [std::os::raw::c_char; 64],
+    pub m_positionDifference: CVector,
+    pub m_incarTargetRotation: CRemotePlayer__bindgen_ty_1,
+    pub pad_6f: [std::os::raw::c_int; 3],
     pub m_onfootTargetPosition: CVector,
     pub m_onfootTargetSpeed: CVector,
     pub m_incarTargetPosition: CVector,
     pub m_incarTargetSpeed: CVector,
-    pub pad_1: [::std::os::raw::c_char; 76usize],
-    pub m_positionDifference: CVector,
-    pub m_incarTargetRotation: CRemotePlayer__bindgen_ty_1,
+    pub m_nId: ID,
+    pub m_nVehicleId: ID,
+    pub field_af: std::os::raw::c_int,
+    pub m_bDrawLabels: BOOL,
+    pub m_bHasJetPack: BOOL,
+    pub m_nSpecialAction: NUMBER,
+    pub pad_bc: [std::os::raw::c_int; 3],
+    pub m_onfootData: packets::OnfootData,
+    pub m_incarData: packets::IncarData,
+    pub m_trailerData: packets::TrailerData,
+    pub m_passengerData: packets::PassengerData,
+    pub m_aimData: packets::AimData,
     pub m_fReportedArmour: f32,
     pub m_fReportedHealth: f32,
-    pub pad_2: [::std::os::raw::c_char; 12usize],
     pub m_animation: Animation,
-    pub m_nUpdateType: ::std::os::raw::c_uchar,
+    pub m_nUpdateType: NUMBER,
     pub m_lastUpdate: TICK,
     pub m_lastTimestamp: TICK,
     pub m_bPerformingCustomAnimation: BOOL,
-    pub m_nStatus: ::std::os::raw::c_int,
+    pub m_nStatus: std::os::raw::c_int,
     pub m_head: CRemotePlayer__bindgen_ty_2,
     pub m_bMarkerState: BOOL,
     pub m_markerPosition: CRemotePlayer__bindgen_ty_3,
@@ -270,7 +264,7 @@ impl CRemotePlayer {
         match self.m_nState {
             17 => self.m_onfootData.m_speed.clone(), // onfoot
             19 => self.m_incarData.m_speed.clone(),  // driver
-            _ => CVector::zero(),
+            _ => CVector::zero(),                    // none
         }
     }
 
@@ -284,12 +278,14 @@ impl CRemotePlayer {
 }
 
 #[repr(C, packed)]
+#[derive(Debug)]
 pub struct CRemotePlayer__bindgen_ty_1 {
     pub real: f32,
     pub imag: CVector,
 }
 
 #[repr(C, packed)]
+#[derive(Debug)]
 pub struct CRemotePlayer__bindgen_ty_2 {
     pub m_direction: CVector,
     pub m_lastUpdate: TICK,
@@ -297,10 +293,11 @@ pub struct CRemotePlayer__bindgen_ty_2 {
 }
 
 #[repr(C, packed)]
+#[derive(Debug)]
 pub struct CRemotePlayer__bindgen_ty_3 {
-    pub x: ::std::os::raw::c_int,
-    pub y: ::std::os::raw::c_int,
-    pub z: ::std::os::raw::c_int,
+    pub x: std::os::raw::c_int,
+    pub y: std::os::raw::c_int,
+    pub z: std::os::raw::c_int,
 }
 
 #[repr(C, packed)]
@@ -310,40 +307,40 @@ pub struct Animation {
 
 #[repr(C, packed)]
 pub struct CLocalPlayer {
-    pub m_pPed: *mut CPed, // CPed
-    pub m_incarData: packets::IncarData,
-    pub m_aimData: packets::AimData,
-    pub m_trailerData: packets::TrailerData,
-    pub m_onfootData: packets::OnfootData,
-    pub m_passengerData: packets::PassengerData,
+    pub m_pPed: *mut CPed,
+    pub m_animation: Animation,
+    pub field_8: std::os::raw::c_int,
     pub m_bIsActive: BOOL,
     pub m_bIsWasted: BOOL,
     pub m_nCurrentVehicle: ID,
     pub m_nLastVehicle: ID,
-    pub m_animation: Animation,
-    pub field_1: ::std::os::raw::c_int,
+    pub m_onfootData: packets::OnfootData,
+    pub m_passengerData: packets::PassengerData,
+    pub m_trailerData: packets::TrailerData,
+    pub m_incarData: packets::IncarData,
+    pub m_aimData: packets::AimData,
+    pub m_spawnInfo: CLocalPlayer_SpawnInfo,
+    pub m_bHasSpawnInfo: BOOL,
+    pub m_bClearedToSpawn: BOOL,
+    pub m_lastSelectionTick: TICK,
+    pub m_initialSelectionTick: TICK,
     pub m_bDoesSpectating: BOOL,
     pub m_nTeam: NUMBER,
-    pub field_10d: ::std::os::raw::c_short,
+    pub field_14b: std::os::raw::c_short,
     pub m_lastUpdate: TICK,
     pub m_lastSpecUpdate: TICK,
     pub m_lastAimUpdate: TICK,
     pub m_lastStatsUpdate: TICK,
-    pub m_cameraTarget: CLocalPlayer_CameraTarget,
-    pub m_lastCameraTargetUpdate: TICK,
-    pub m_head: CLocalPlayer__bindgen_ty_1,
-    pub m_lastAnyUpdate: TICK,
-    pub m_bClearedToSpawn: BOOL,
-    pub m_lastSelectionTick: TICK,
-    pub m_initialSelectionTick: TICK,
-    pub m_spawnInfo: CLocalPlayer_SpawnInfo,
-    pub m_bHasSpawnInfo: BOOL,
     pub m_lastWeaponsUpdate: TICK,
-    pub m_weaponsData: CLocalPlayer__bindgen_ty_2,
+    pub m_weaponsData: CLocalPlayer__bindgen_ty_1,
     pub m_bPassengerDriveBy: BOOL,
-    pub m_nCurrentInterior: ::std::os::raw::c_char,
+    pub m_nCurrentInterior: std::os::raw::c_char,
     pub m_bInRCMode: BOOL,
-    pub m_szName: [::std::os::raw::c_char; 256usize],
+    pub m_cameraTarget: CLocalPlayer_CameraTarget,
+    pub m_head: CLocalPlayer__bindgen_ty_2,
+    pub m_lastHeadUpdate: TICK,
+    pub m_lastAnyUpdate: TICK,
+    pub m_szName: [std::os::raw::c_char; 256],
     pub m_surfing: CLocalPlayer__bindgen_ty_3,
     pub m_classSelection: CLocalPlayer__bindgen_ty_4,
     pub m_zoneDisplayingEnd: TICK,
@@ -381,18 +378,24 @@ impl CLocalPlayer {
     }
 
     pub fn ped_position(&self) -> CVector {
+        let null_vec = CVector {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+
         if self.m_spectating.m_nMode != 0 && self.m_spectating.m_nObject != -1 {
             return self.spec_position();
         }
 
         if self.m_pPed.is_null() {
-            return CVector::zero();
+            return null_vec;
         }
 
         let ped = unsafe { &*self.m_pPed };
 
         if ped.m_pGamePed.is_null() {
-            return CVector::zero();
+            return null_vec;
         }
 
         unsafe { ped.m_pGamePed.read().matrix.read().pos }
@@ -429,7 +432,11 @@ impl CLocalPlayer {
 
     pub fn velocity(&self) -> CVector {
         if self.m_nCurrentVehicle != u16::max_value() {
+            //            if self.m_passengerData.m_nSeatId > 0 {
+            //                CVector { x: 0.0, y: 0.0, z: 0.0 } // passenger
+            //            } else {
             self.m_incarData.m_speed.clone() // driver
+                                             //            }
         } else {
             self.m_onfootData.m_speed.clone() // onfoot
         }
@@ -445,6 +452,29 @@ impl CLocalPlayer {
 }
 
 #[repr(C, packed)]
+#[derive(Debug)]
+pub struct CLocalPlayer_SpawnInfo {
+    pub m_nTeam: NUMBER,
+    pub m_nSkin: std::os::raw::c_int,
+    pub field_c: std::os::raw::c_char,
+    pub m_position: CVector,
+    pub m_fRotation: f32,
+    pub m_aWeapon: [std::os::raw::c_int; 3],
+    pub m_aAmmo: [std::os::raw::c_int; 3],
+}
+
+#[repr(C, packed)]
+#[derive(Debug)]
+pub struct CLocalPlayer__bindgen_ty_1 {
+    pub m_nAimedPlayer: ID,
+    pub m_nAimedActor: ID,
+    pub m_nCurrentWeapon: NUMBER,
+    pub m_aLastWeapon: [NUMBER; 13],
+    pub m_aLastWeaponAmmo: [std::os::raw::c_int; 13],
+}
+
+#[repr(C, packed)]
+#[derive(Debug)]
 pub struct CLocalPlayer_CameraTarget {
     pub m_nObject: ID,
     pub m_nVehicle: ID,
@@ -453,74 +483,51 @@ pub struct CLocalPlayer_CameraTarget {
 }
 
 #[repr(C, packed)]
-pub struct CLocalPlayer__bindgen_ty_1 {
+#[derive(Debug)]
+pub struct CLocalPlayer__bindgen_ty_2 {
     pub m_direction: CVector,
     pub m_lastUpdate: TICK,
     pub m_lastLook: TICK,
 }
 
 #[repr(C, packed)]
-pub struct CLocalPlayer_SpawnInfo {
-    pub m_nTeam: NUMBER,
-    pub m_nSkin: ::std::os::raw::c_int,
-    pub field_c: ::std::os::raw::c_char,
-    pub m_position: CVector,
-    pub m_fRotation: f32,
-    pub m_aWeapon: [::std::os::raw::c_int; 3usize],
-    pub m_aAmmo: [::std::os::raw::c_int; 3usize],
-}
-
-#[repr(C, packed)]
-pub struct CLocalPlayer__bindgen_ty_2 {
-    pub m_nAimedPlayer: ID,
-    pub m_nAimedActor: ID,
-    pub m_nCurrentWeapon: NUMBER,
-    pub m_aLastWeapon: [NUMBER; 13usize],
-    pub m_aLastWeaponAmmo: [::std::os::raw::c_int; 13usize],
-}
-
-#[repr(C, packed)]
 pub struct CLocalPlayer__bindgen_ty_3 {
-    pub m_nEntityId: ID,
-    pub m_lastUpdate: TICK,
-    pub __bindgen_anon_1: CLocalPlayer__bindgen_ty_3__bindgen_ty_1,
-    pub m_bStuck: BOOL,
     pub m_bIsActive: BOOL,
     pub m_position: CVector,
-    pub field_: ::std::os::raw::c_int,
-    pub m_nMode: ::std::os::raw::c_int,
+    pub field_10: std::os::raw::c_int,
+    pub m_nEntityId: ID,
+    pub m_lastUpdate: TICK,
+    pub __bindgen_anon_1: *mut (),
+    pub m_bStuck: BOOL,
+    pub m_nMode: std::os::raw::c_int,
 }
 
 #[repr(C, packed)]
-pub union CLocalPlayer__bindgen_ty_3__bindgen_ty_1 {
-    pub m_pVehicle: *mut CVehicle, // CVehicle
-    pub m_pObject: *mut (),
-    _bindgen_union_align: [u8; 4usize],
-}
-
-#[repr(C, packed)]
+#[derive(Debug)]
 pub struct CLocalPlayer__bindgen_ty_4 {
     pub m_bEnableAfterDeath: BOOL,
-    pub m_nSelected: ::std::os::raw::c_int,
+    pub m_nSelected: std::os::raw::c_int,
     pub m_bWaitingForSpawnRequestReply: BOOL,
     pub m_bIsActive: BOOL,
 }
 
 #[repr(C, packed)]
+#[derive(Debug)]
 pub struct CLocalPlayer__bindgen_ty_5 {
-    pub m_nMode: ::std::os::raw::c_char,
-    pub m_nType: ::std::os::raw::c_char,
-    pub m_nObject: ::std::os::raw::c_int,
+    pub m_nMode: std::os::raw::c_char,
+    pub m_nType: std::os::raw::c_char,
+    pub m_nObject: std::os::raw::c_int,
     pub m_bProcessed: BOOL,
 }
 
 #[repr(C, packed)]
+#[derive(Debug)]
 pub struct CLocalPlayer__bindgen_ty_6 {
     pub m_nVehicleUpdating: ID,
-    pub m_nBumper: ::std::os::raw::c_int,
-    pub m_nDoor: ::std::os::raw::c_int,
-    pub m_bLight: bool,
-    pub m_bWheel: bool,
+    pub m_nBumper: std::os::raw::c_int,
+    pub m_nDoor: std::os::raw::c_int,
+    pub m_bLight: std::os::raw::c_char,
+    pub m_bWheel: std::os::raw::c_char,
 }
 
 #[repr(C, packed)]
@@ -852,11 +859,11 @@ fn pools() -> Option<&'static mut CNetGame_Pools> {
             return None;
         }
 
-        if (*netgame).m_pPools.is_null() {
+        if (*netgame).pools.is_null() {
             return None;
         }
 
-        let pools = &mut *(*netgame).m_pPools;
+        let pools = &mut *(*netgame).pools;
 
         Some(pools)
     }
