@@ -87,7 +87,7 @@ impl CNetGame {
 
 extern "thiscall" {
     fn GetObjectPoolAddress(offset: usize) -> *mut CObjectPool;
-    fn GetObjectPoolAddress(offset: usize) -> *mut CVehiclePool;
+    fn GetVehiclePoolAddress(offset: usize) -> *mut CVehiclePool;
     fn GetPlayerPoolAddress(offset: usize) -> *mut CPlayerPool;
 }
 
@@ -109,7 +109,7 @@ impl CNetGame_Pools {
             m_pMenu: std::ptr::null_mut(),
             m_pActor: std::ptr::null_mut(),
             m_pPlayer: unsafe { GetPlayerPoolAddress(0x1170) },
-            m_pVehicle: unsafe { GetPlayerPoolAddress(0x1180) },
+            m_pVehicle: unsafe { GetVehiclePoolAddress(0x1180) },
             m_pPickup: std::ptr::null_mut(),
             m_pObject: unsafe { GetObjectPoolAddress(0x2E40) }, 
             m_pGangZone: std::ptr::null_mut(),
