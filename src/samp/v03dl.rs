@@ -12,7 +12,7 @@ pub const CGAME: usize = 0x2ACA3C;
 pub const CGAME_SETCURSORMODE: usize = 0xA0530;
 pub const CGAME_PROCESSINPUTENABLING: usize = 0xA0410;
 pub const CDIALOG: usize = 0x2AC9E0;
-pub const CDEATHWINDOW_DRAW: usize = 0x6A2E0;
+pub const CDEATHWINDOW_DRAW: usize = 0x66640; // Unchanged
 
 const SPEC_MODE_VEHICLE: i8 = 3;
 const SPEC_MODE_PLAYER: i8 = 4;
@@ -29,14 +29,14 @@ pub enum Gamestate {
     Restarting,
 }
 
-impl From<i32> for Gamestate {
-    fn from(state: i32) -> Gamestate {
+impl From<u32> for Gamestate {
+    fn from(state: u32) -> Gamestate {
         match state {
-            1 => Gamestate::WaitConnect,
-            2 => Gamestate::Connecting,
-            6 => Gamestate::AwaitJoin,
-            5 => Gamestate::Connected,
-            11 => Gamestate::Restarting,
+            9 => Gamestate::WaitConnect,
+            13 => Gamestate::Connecting,
+            15 => Gamestate::AwaitJoin,
+            14 => Gamestate::Connected,
+            18 => Gamestate::Restarting,
             _ => Gamestate::None,
         }
     }
@@ -44,21 +44,20 @@ impl From<i32> for Gamestate {
 
 #[repr(C)]
 pub struct CNetGame {
-    pub pad_0: [::std::os::raw::c_char; 44usize],
-    pub m_pRakClient: *mut (),
-    pub m_szHostAddress: [::std::os::raw::c_uchar; 257usize],
-    pub m_szHostname: [::std::os::raw::c_char; 257usize],
-    pub m_bDisableCollision: bool,
-    pub m_bUpdateCameraTarget: bool,
-    pub m_bNametagStatus: bool,
-    pub m_nPort: ::std::os::raw::c_int,
-    pub m_bLanMode: BOOL,
-    pub m_aMapIcons: [GTAREF; 100usize],
-    pub m_nGameState: ::std::os::raw::c_int,
-    pub m_lastConnectAttempt: TICK,
-    pub m_pSettings: *mut (),
-    pub pad_3: [::std::os::raw::c_char; 5usize],
-    pub m_pPools: *mut CNetGame_Pools,
+    pub unk_0: *mut (),
+    pub server_info: *mut (),
+    pub unk_1: [u8; 24],
+    pub ip: [u8; 257],
+    pub hostname: [u8; 259],
+    pub nametag_status: bool,
+    pub port: u32,
+    pub map_icons: [u32; 100],
+    pub lanmode: u32,
+    pub gamestate: u32,
+    pub connect_tick: u32,
+    pub settings: *mut (),
+    pub rakclient: *mut (),
+    pub pools: *mut CNetGame_Pools,
 }
 
 impl CNetGame {
@@ -73,18 +72,33 @@ impl CNetGame {
     }
 
     pub fn addr(&self) -> Option<SocketAddr> {
-        let iter = self.m_szHostAddress.iter().take_while(|&&byte| byte != 0);
+        let iter = self.ip.iter().take_while(|&&byte| byte != 0);
         let addr = String::from_utf8(iter.cloned().collect()).ok()?;
         let addr: Ipv4Addr = addr.parse().ok()?;
 
-        Some(SocketAddr::from((addr, self.m_nPort as u16)))
+        Some(SocketAddr::from((addr, self.port as u16)))
     }
 
     pub fn gamestate(&self) -> Gamestate {
-        Gamestate::from(self.m_nGameState)
+        Gamestate::from(self.gamestate)
     }
 }
 
+#[repr(C)]
+
+pub struct CNetGame_Pools {
+    pub m_pActor: *mut (),
+    pub m_pObject: *mut CObjectPool,
+    pub m_pGangzone: *mut (),
+    pub m_pLabel: *mut (),
+    pub m_pTextdraw: *mut (),
+    pub m_pMenu: *mut (),
+    pub m_pPlayer: *mut CPlayerPool,
+    pub m_pVehicle: *mut CVehiclePool,
+    pub m_pPickup: *mut (),
+}
+
+#[repr(C)]
 pub struct CPlayerPool {
     pub m_nLargestId: std::os::raw::c_int,
     pub m_localInfo: CPlayerPool_Local,
@@ -94,16 +108,83 @@ pub struct CPlayerPool {
 }
 
 #[repr(C)]
-pub struct CNetGame_Pools {
-    pub m_pMenu: *mut (),
-    pub m_pActor: *mut (),
-    pub m_pPlayer: *mut CPlayerPool,
-    pub m_pVehicle: *mut CVehiclePool,
-    pub m_pPickup: *mut (),
-    pub m_pObject: *mut CObjectPool,
-    pub m_pGangZone: *mut (),
-    pub m_pLabel: *mut (),
-    pub m_pTextDraw: *mut (),
+pub struct CVehiclePool {
+    pub m_nCount: std::os::raw::c_int,
+    pub m_waiting: CVehiclePool__bindgen_ty_1,
+    pub m_pObject: [*mut CVehicle; 2000],
+    pub m_bNotEmpty: [BOOL; 2000],
+    pub m_pGameObject: [*mut super::players::GamePed; 2000], // GTA::CVehicle pool
+    pub pad_6ef4: [std::os::raw::c_int; 2000],
+    pub m_nLastUndrivenId: [ID; 2000],
+    pub m_lastUndrivenProcessTick: [TICK; 2000],
+    pub m_bIsActive: [BOOL; 2000],
+    pub m_bIsDestroyed: [BOOL; 2000],
+    pub m_tickWhenDestroyed: [TICK; 2000],
+    pub m_spawnedAt: [CVector; 2000],
+    pub m_bNeedsToInitializeLicensePlates: BOOL,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct CVehiclePool_Info {
+    pub m_nId: ID,
+    pub m_nType: std::os::raw::c_int,
+    pub m_position: CVector,
+    pub m_fRotation: f32,
+    pub m_nPrimaryColor: NUMBER,
+    pub m_nSecondaryColor: NUMBER,
+    pub m_fHealth: f32,
+    pub m_nInterior: std::os::raw::c_char,
+    pub m_nDoorDamageStatus: std::os::raw::c_int,
+    pub m_nPanelDamageStatus: std::os::raw::c_int,
+    pub m_nLightDamageStatus: std::os::raw::c_char,
+    pub m_bDoorsLocked: bool,
+    pub m_bHasSiren: bool,
+}
+
+#[repr(C)]
+#[derive(Clone)]
+pub struct CVehiclePool__bindgen_ty_1 {
+    pub m_entry: [CVehiclePool_Info; 100],
+    pub m_bNotEmpty: [BOOL; 100],
+}
+
+#[repr(C)]
+pub struct CVehicle {
+    pub _base: CEntity,
+    pub m_pTrailer: *mut CVehicle,
+    pub m_pGameVehicle: *mut super::players::GamePed, // GTA::CVehicle
+    pub pad_50: [std::os::raw::c_char; 8],
+    pub m_bIsInvulnerable: BOOL,
+    pub m_bIsLightsOn: BOOL,
+    pub m_bIsLocked: BOOL,
+    pub m_bIsObjective: bool,
+    pub m_bObjectiveBlipCreated: BOOL,
+    pub m_timeSinceLastDriven: TICK,
+    pub m_bHasBeenDriven: BOOL,
+    pub pad_71: [std::os::raw::c_char; 4],
+    pub m_bEngineState: BOOL,
+    pub m_nPrimaryColor: NUMBER,
+    pub m_nSecondaryColor: NUMBER,
+    pub m_bNeedsToUpdateColor: BOOL,
+    pub m_bUnoccupiedSync: BOOL,
+    pub m_bRemoteUnocSync: BOOL,
+    pub m_bKeepModelLoaded: BOOL,
+    pub m_bHasSiren: std::os::raw::c_int,
+    pub m_pLicensePlate: *mut (), // IDirect3DTexture9
+    pub m_szLicensePlateText: [std::os::raw::c_char; 33],
+    pub m_marker: GTAREF,
+}
+
+impl CVehicle {
+    pub fn position(&self) -> CVector {
+        if self.m_pGameVehicle.is_null() {
+            return CVector::zero();
+        }
+
+        let placeable = unsafe { &self.m_pGameVehicle.read() };
+        unsafe { placeable.matrix.read().pos }
+    }
 }
 
 #[repr(C)]
@@ -309,8 +390,61 @@ pub struct CRemotePlayer__bindgen_ty_3 {
 }
 
 #[repr(C)]
-pub struct Animation {
-    pub shit: u32,
+
+pub struct Accessory {
+    pub m_nModel: std::os::raw::c_int,
+    pub m_nBone: std::os::raw::c_int,
+    pub m_offset: CVector,
+    pub m_rotation: CVector,
+    pub m_scale: CVector,
+    pub m_firstMaterialColor: D3DCOLOR,
+    pub m_secondMaterialColor: D3DCOLOR,
+}
+
+#[repr(C)]
+pub struct CPed {
+    pub _base: CEntity,
+    pub m_bUsingCellphone: BOOL,
+    pub m_accessories: CPed__bindgen_ty_1,
+    pub m_pGamePed: *mut super::players::GamePed,
+    pub pad_2a8: [std::os::raw::c_int; 2usize],
+    pub m_nPlayerNumber: NUMBER,
+    pub pad_2b1: [std::os::raw::c_int; 2usize],
+    pub m_parachuteObject: GTAREF,
+    pub m_urinatingParticle: GTAREF,
+    pub m_stuff: CPed__bindgen_ty_2,
+    pub m_arrow: GTAREF,
+    pub field_2de: std::os::raw::c_char,
+    pub m_bIsDancing: BOOL,
+    pub m_nDanceStyle: std::os::raw::c_int,
+    pub m_nLastDanceMove: std::os::raw::c_int,
+    pub pad_2de: [std::os::raw::c_char; 20],
+    pub m_bIsUrinating: BOOL,
+    pub pad: [std::os::raw::c_char; 55],
+}
+
+#[repr(C)]
+
+pub struct CPed__bindgen_ty_1 {
+    pub m_bNotEmpty: [BOOL; 10],
+    pub m_info: [Accessory; 10],
+    pub m_pObject: [*mut u8; 10],
+}
+
+#[repr(C)]
+
+pub struct CPed__bindgen_ty_2 {
+    pub m_nType: std::os::raw::c_int,
+    pub m_object: GTAREF,
+    pub m_nDrunkLevel: std::os::raw::c_int,
+}
+
+#[repr(C)]
+pub struct CEntity {
+    pub vtable_: *const u8,
+    pub pad_4: [std::os::raw::c_char; 60],
+    pub m_pGameEntity: *mut crate::gta::entity::CEntity,
+    pub m_handle: GTAREF,
 }
 
 #[repr(C)]
@@ -539,136 +673,18 @@ pub struct CLocalPlayer__bindgen_ty_6 {
 }
 
 #[repr(C)]
-pub struct CVehiclePool {
-    pub m_nCount: ::std::os::raw::c_int,
-    pub m_waitingList: CVehiclePool__bindgen_ty_1,
-    pub m_pObject: [*mut CVehicle; 2000usize],
-    pub m_bNotEmpty: [BOOL; 2000usize],
-    pub m_pGameObject: [*mut GamePed; 2000usize], // GTA::CVehicle
-    pub pad_6ef4: [::std::os::raw::c_uint; 2000usize],
-    pub m_nLastUndrivenId: [ID; 2000usize],
-    pub m_lastUndrivenProcessTick: [TICK; 2000usize],
-    pub m_bIsActive: [BOOL; 2000usize],
-    pub m_bIsDestroyed: [BOOL; 2000usize],
-    pub m_tickWhenDestroyed: [TICK; 2000usize],
-    pub m_spawnedAt: [CVector; 2000usize],
-    pub m_bNeedsToInitializeLicensePlates: BOOL,
+
+pub struct CSimpleTransform {
+    pub m_vPosn: CVector,
+    pub m_fHeading: f32,
 }
 
 #[repr(C)]
-pub struct CVehiclePool_Info {
-    pub m_nId: ID,
-    pub m_nType: ::std::os::raw::c_int,
-    pub m_position: CVector,
-    pub m_fRotation: f32,
-    pub m_nPrimaryColor: NUMBER,
-    pub m_nSecondaryColor: NUMBER,
-    pub m_fHealth: f32,
-    pub m_nInterior: ::std::os::raw::c_char,
-    pub m_nDoorDamageStatus: ::std::os::raw::c_int,
-    pub m_nPanelDamageStatus: ::std::os::raw::c_int,
-    pub m_nLightDamageStatus: ::std::os::raw::c_char,
-    pub m_bDoorsLocked: bool,
-    pub m_bHasSiren: bool,
-}
 
-#[repr(C)]
-pub struct CVehiclePool__bindgen_ty_1 {
-    pub m_entry: [CVehiclePool_Info; 100usize],
-    pub m_bNotEmpty: [BOOL; 100usize],
-}
-
-#[repr(C)]
-pub struct CVehicle {
-    pub _base: CEntity,
-    pub m_pTrailer: *mut CVehicle,
-    pub m_pGameVehicle: *mut GamePed, // GTA::CVehicle
-    pub pad_50: [::std::os::raw::c_char; 8usize],
-    pub m_bIsInvulnerable: BOOL,
-    pub m_bIsLightsOn: BOOL,
-    pub m_bIsLocked: BOOL,
-    pub m_bIsObjective: bool,
-    pub m_bObjectiveBlipCreated: BOOL,
-    pub m_timeSinceLastDriven: TICK,
-    pub m_bHasBeenDriven: BOOL,
-    pub pad_71: [::std::os::raw::c_char; 4usize],
-    pub m_bEngineState: BOOL,
-    pub m_nPrimaryColor: ::std::os::raw::c_uchar,
-    pub m_nSecondaryColor: ::std::os::raw::c_uchar,
-    pub m_bNeedsToUpdateColor: BOOL,
-    pub m_bUnoccupiedSync: BOOL,
-    pub m_bRemoteUnocSync: BOOL,
-    pub m_bKeepModelLoaded: BOOL,
-    pub m_bHasSiren: ::std::os::raw::c_int,
-    pub m_pLicensePlate: *mut (), // IDirect3DTexture9
-    pub m_szLicensePlateText: [::std::os::raw::c_char; 33usize],
-    pub m_marker: GTAREF,
-}
-
-impl CVehicle {
-    pub fn position(&self) -> CVector {
-        if self.m_pGameVehicle.is_null() {
-            return CVector::zero();
-        }
-
-        let placeable = unsafe { &self.m_pGameVehicle.read() };
-        unsafe { placeable.matrix.read().pos }
-    }
-}
-
-#[repr(C)]
-pub struct CEntity {
-    pub vtable_: *const u8,
-    pub pad_4: [std::os::raw::c_char; 60],
-    pub m_pGameEntity: *mut *mut crate::gta::entity::CEntity,
-    pub m_handle: GTAREF,
-}
-
-#[repr(C)]
-pub struct CPed {
-    pub _base: CEntity,
-    pub m_bUsingCellphone: BOOL,
-    pub m_accessories: CPed__bindgen_ty_1,
-    pub m_pGamePed: *mut GamePed, // GTA::CPed
-    pub pad_2a8: [::std::os::raw::c_uint; 2usize],
-    pub m_nPlayerNumber: ::std::os::raw::c_uchar,
-    pub pad_2b1: [::std::os::raw::c_uint; 2usize],
-    pub m_parachuteObject: GTAREF,
-    pub m_urinatingParticle: GTAREF,
-    pub m_stuff: CPed__bindgen_ty_2,
-    pub m_arrow: GTAREF,
-    pub field_2de: ::std::os::raw::c_uchar,
-    pub m_bDoesDancing: BOOL,
-    pub m_nDanceStyle: ::std::os::raw::c_uint,
-    pub m_nLastDanceMove: ::std::os::raw::c_uint,
-    pub pad_2de: [::std::os::raw::c_uchar; 20usize],
-    pub m_bDoesUrinating: BOOL,
-    pub pad: [::std::os::raw::c_uchar; 55usize],
-}
-
-#[repr(C)]
-pub struct CPed__bindgen_ty_1 {
-    pub m_bNotEmpty: [BOOL; 10usize],
-    pub m_info: [Accessory; 10usize],
-    pub m_pObject: [*mut (); 10usize], // CObject
-}
-
-#[repr(C)]
-pub struct CPed__bindgen_ty_2 {
-    pub m_nType: ::std::os::raw::c_int,
-    pub m_object: GTAREF,
-    pub m_nDrunkLevel: ::std::os::raw::c_uint,
-}
-
-#[repr(C)]
-pub struct Accessory {
-    pub m_nModel: ::std::os::raw::c_int,
-    pub m_nBone: ::std::os::raw::c_int,
-    pub m_offset: CVector,
-    pub m_rotation: CVector,
-    pub m_scale: CVector,
-    pub m_firstMaterialColor: D3DCOLOR,
-    pub m_secondMaterialColor: D3DCOLOR,
+pub struct CPlaceable {
+    pub vtable_: *const (),
+    pub m_placement: CSimpleTransform,
+    pub m_matrix: *mut RwMatrix,
 }
 
 #[repr(C)]
@@ -742,6 +758,11 @@ pub struct CObject__bindgen_ty_1__bindgen_ty_2__bindgen_ty_1 {
     pub m_fontColor: D3DCOLOR,
     pub m_backgroundColor: D3DCOLOR,
     pub m_align: ::std::os::raw::c_char,
+}
+
+#[repr(C)]
+pub struct Animation {
+    pub shit: u32,
 }
 
 pub fn netgame() -> *mut CNetGame {
@@ -867,11 +888,11 @@ fn pools() -> Option<&'static mut CNetGame_Pools> {
             return None;
         }
 
-        if (*netgame).m_pPools.is_null() {
+        if (*netgame).pools.is_null() {
             return None;
         }
 
-        let pools = &mut *(*netgame).m_pPools;
+        let pools = &mut *(*netgame).pools;
 
         Some(pools)
     }
