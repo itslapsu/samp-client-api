@@ -26,6 +26,7 @@ impl LabelPool {
         let address = match version() {
             Version::V037 => 0x1340,
             Version::V037R3 => 0x1340,
+            Version::V03DLR1 => 0x1350,
             _ => return,
         };
 

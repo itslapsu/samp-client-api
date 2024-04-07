@@ -49,7 +49,6 @@ pub fn set_proxy(
     on_destroy: OnDestroy,
 ) {
     unsafe {
-        log::trace!("DEBUG: d9_proxy kepanggil");
         let func: CreateDevice = std::mem::transmute(0x807C2B);
         log::trace!("finding function and hooking ... (d9_proxy::set_proxy)");
         let mut hook = GenericDetour::new(func, hook_direct3d_create9).unwrap();
