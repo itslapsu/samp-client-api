@@ -26,6 +26,7 @@ impl AudioStream {
         let address = match version() {
             Version::V037 => 0x62B40,
             Version::V037R3 => 0x65F90,
+            Version::V03DLR1 => 0x66180,
             _ => return,
         };
 

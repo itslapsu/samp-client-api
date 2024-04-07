@@ -1,5 +1,5 @@
 use super::version::{version, Version};
-use super::{v037 as r1, v037r3 as r3, v03dl as dl};
+use super::{v037 as r1, v037r3 as r3, v03dlr1 as dl};
 use crate::gta::matrix::{CVector, RwMatrix};
 
 #[repr(C, packed)]
@@ -347,10 +347,10 @@ pub fn local_player<'a>() -> Option<LocalPlayer<'a>> {
             player_v3: r3::local_player(),
             player_dl: None,
         }),
-        Version::V03DL => Some(LocalPlayer {
+        Version::V03DLR1 => Some(LocalPlayer {
             player_v1: None,
-            player_v3: None,
             player_dl: dl::local_player(),
+            player_v3: None,
         }),
         _ => None,
     }
@@ -368,10 +368,10 @@ pub fn find_player<'a>(id: i32) -> Option<Player<'a>> {
             player_v3: r3::find_player(id),
             player_dl: None,
         }),
-        Version::V03DL => Some(Player {
+        Version::V03DLR1 => Some(Player {
             player_v1: None,
-            player_v3: None,
             player_dl: dl::find_player(id),
+            player_v3: None,
         }),
         _ => None,
     }
@@ -393,10 +393,10 @@ pub fn players<'a>() -> Option<PlayersIterator<'a>> {
             index: 0,
         }),
 
-        Version::V03DL => Some(PlayersIterator {
+        Version::V03DLR1 => Some(PlayersIterator {
             players_dl: dl::player_pool().map(|pool| pool.m_pObject.as_mut()),
-            players_v3: None,
             players_v1: None,
+            players_v3: None,
             index: 0,
         }),
 

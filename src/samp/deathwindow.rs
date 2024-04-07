@@ -26,6 +26,7 @@ impl DeathWindow {
         let address = match version() {
             Version::V037 => crate::samp::v037::CDEATHWINDOW_DRAW,
             Version::V037R3 => crate::samp::v037r3::CDEATHWINDOW_DRAW,
+            Version::V03DLR1 => crate::samp::v03dlr1::CDEATHWINDOW_DRAW,
             _ => return,
         };
 
