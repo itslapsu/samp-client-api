@@ -1,11 +1,11 @@
-#[repr(C, packed)]
+// #[repr(C, packed)]
 #[derive(Debug)]
 pub struct CSimpleTransform {
     pub m_vPosn: CVector,
     pub m_fHeading: f32,
 }
 
-#[repr(C, packed)]
+// #[repr(C, packed)]
 #[derive(Debug)]
 pub struct CPlaceable {
     pub vtable_: *const (),
@@ -23,7 +23,7 @@ impl CPlaceable {
     }
 }
 
-#[repr(C, packed)]
+// #[repr(C, packed)]
 #[derive(Debug, Clone, Copy)]
 pub struct CVector {
     pub x: f32,
@@ -60,7 +60,7 @@ impl CVector {
     }
 }
 
-#[repr(C, packed)]
+// #[repr(C, packed)]
 #[derive(Debug, Clone)]
 pub struct RwMatrix {
     pub right: CVector,

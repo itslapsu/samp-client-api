@@ -1,7 +1,7 @@
 use super::{handle, CStdString, BOOL, D3DCOLOR, GTAREF, ID, NUMBER, TICK};
 use crate::gta::matrix::{CVector, RwMatrix};
 
-#[repr(C, packed)]
+// #[repr(C, packed)]
 pub struct TrailerData {
     pub m_nId: ID,
     pub m_position: CVector,
@@ -10,7 +10,7 @@ pub struct TrailerData {
     pub m_turnSpeed: CVector,
 }
 
-#[repr(C, packed)]
+// #[repr(C, packed)]
 pub struct PassengerData {
     pub m_nVehicleId: ID,
     pub m_nSeatId: std::os::raw::c_uchar,
@@ -21,7 +21,7 @@ pub struct PassengerData {
     pub m_position: CVector,
 }
 
-#[repr(C, packed)]
+// #[repr(C, packed)]
 pub struct OnfootData {
     pub m_controllerState: ControllerState,
     pub m_position: CVector,
@@ -36,7 +36,7 @@ pub struct OnfootData {
     pub m_animation: Animation,
 }
 
-#[repr(C, packed)]
+// #[repr(C, packed)]
 pub struct IncarData {
     pub m_nVehicle: ID,
     pub m_controllerState: ControllerState,
@@ -53,7 +53,7 @@ pub struct IncarData {
     pub __bindgen_anon_1: f32,
 }
 
-#[repr(C, packed)]
+// #[repr(C, packed)]
 pub struct AimData {
     pub m_nCameraMode: std::os::raw::c_uchar,
     pub m_aimf1: CVector,
@@ -63,14 +63,14 @@ pub struct AimData {
     pub m_nAspectRatio: std::os::raw::c_char,
 }
 
-#[repr(C, packed)]
+// #[repr(C, packed)]
 pub struct ControllerState {
     pub m_sLeftStickX: std::os::raw::c_short,
     pub m_sLeftStickY: std::os::raw::c_short,
     pub __bindgen_anon_1: std::os::raw::c_short,
 }
 
-#[repr(C, packed)]
+// #[repr(C, packed)]
 pub struct Animation {
     pub shit: u32,
 }

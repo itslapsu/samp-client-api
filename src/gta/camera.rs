@@ -114,7 +114,7 @@ pub struct CCam {
     pub m_bFirstPersonRunAboutActive: bool,
 }
 
-#[repr(C, packed)]
+// #[repr(C, packed)]
 #[derive(Debug)]
 pub struct CQueuedMode {
     pub m_nMode: std::os::raw::c_ushort,
@@ -123,14 +123,14 @@ pub struct CQueuedMode {
     pub m_nMaxZoom: std::os::raw::c_ushort,
 }
 
-#[repr(C, packed)]
+// #[repr(C, packed)]
 #[derive(Debug)]
 pub struct CCamPathSplines {
     pub m_pArrPathData: *mut f32,
 }
 
-#[repr(C, packed)]
-#[derive(Debug)]
+// #[repr(C, packed)]
+// #[derive(Debug)]
 pub struct CCamera {
     pub _base: CPlaceable,
     pub m_bAboveGroundTrainNodesLoaded: bool,
