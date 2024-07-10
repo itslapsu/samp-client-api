@@ -16,7 +16,7 @@ pub fn on_shutdown<F: FnMut() + 'static>(callback: F) {
     let func = shutdown_func();
 
     unsafe {
-        GenericDetour::new(func, cgame_destroy)
+        let _ = GenericDetour::new(func, cgame_destroy)
             .map(|hook| {
                 let _ = hook.enable();
 

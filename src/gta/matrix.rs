@@ -1,5 +1,5 @@
 #[repr(C, packed)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct CSimpleTransform {
     pub m_vPosn: CVector,
     pub m_fHeading: f32,

@@ -64,7 +64,7 @@ pub fn unset_proxy() {
         //
         //        Box::from_raw(vftable);
 
-        let device = (*D3D9_DEVICE_PTR as *mut Device);
+        let device = *D3D9_DEVICE_PTR as *mut Device;
         (*device).vftable = (*D3D9_DEVICE).lpVtbl as *mut _;
     }
 }

@@ -4,10 +4,14 @@ use winapi::shared::d3d9caps::*;
 use winapi::shared::d3d9types::*;
 use winapi::shared::guiddef::*;
 use winapi::shared::minwindef::*;
-use winapi::shared::windef::{HMONITOR, HWND, POINT, RECT};
+use winapi::shared::windef::{HMONITOR, HWND,
+    // POINT, RECT
+};
 use winapi::um::unknwnbase::{IUnknown, IUnknownVtbl};
-use winapi::um::wingdi::{PALETTEENTRY, RGNDATA};
-use winapi::um::winnt::{HANDLE, HRESULT, VOID};
+// use winapi::um::wingdi::{PALETTEENTRY, RGNDATA};
+use winapi::um::winnt::{
+    // HANDLE,
+    HRESULT, VOID};
 
 use retour::GenericDetour;
 
@@ -51,7 +55,7 @@ pub fn set_proxy(
     unsafe {
         let func: CreateDevice = std::mem::transmute(0x807C2B);
         log::trace!("finding function and hooking ... (d9_proxy::set_proxy)");
-        let mut hook = GenericDetour::new(func, hook_direct3d_create9).unwrap();
+        let hook = GenericDetour::new(func, hook_direct3d_create9).unwrap();
         log::trace!("done enable it ... (d9_proxy::set_proxy)");
         hook.enable().unwrap();
 

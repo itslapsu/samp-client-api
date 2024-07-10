@@ -1,9 +1,10 @@
 use std::borrow::Cow;
 use std::ffi::CStr;
-use std::os::raw::c_char;
+// use std::os::raw::c_char;
 
 use super::rwplcore::*;
 
+#[allow(non_upper_case_globals)]
 pub const rwTEXTUREBASENAMELENGTH: usize = 32;
 
 pub type RwObjectHasFrameSyncFunction = Option<

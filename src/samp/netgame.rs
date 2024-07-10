@@ -1,10 +1,10 @@
-use std::ptr::NonNull;
+// use std::ptr::NonNull;
 use std::net::SocketAddr;
 
 use super::{v037, v037r3, v03dlr1};
 use super::version::{Version, version};
 use retour::GenericDetour;
-use crate::samp::Gamestate;
+// use crate::samp::Gamestate;
 
 pub struct NetGame<'a> {
     netgame_v1: Option<&'a mut v037::CNetGame>,
@@ -58,7 +58,7 @@ impl<'a> NetGame<'a> {
             let ptr = super::handle().add(address);
             let func: extern "thiscall" fn(this: *mut ()) = std::mem::transmute(ptr);
 
-            GenericDetour::new(func, cnetgame_destroy)
+            let _ = GenericDetour::new(func, cnetgame_destroy)
                 .map(|hook| {
                     let _ = hook.enable();
 
@@ -82,7 +82,7 @@ impl<'a> NetGame<'a> {
             let ptr = super::handle().add(address);
             let func: extern "thiscall" fn(*mut ()) = std::mem::transmute(ptr);
 
-            GenericDetour::new(func, cnetgame_reconnect)
+            let _ = GenericDetour::new(func, cnetgame_reconnect)
                 .map(|hook| {
                     let _ = hook.enable();
 
@@ -106,7 +106,7 @@ impl<'a> NetGame<'a> {
             let ptr = super::handle().add(address);
             let func: extern "thiscall" fn(*mut (), *mut ()) = std::mem::transmute(ptr);
 
-            GenericDetour::new(func, cnetgame_connect)
+            let _ = GenericDetour::new(func, cnetgame_connect)
                 .map(|hook| {
                     let _ = hook.enable();
 

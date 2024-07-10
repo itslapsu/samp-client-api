@@ -63,7 +63,7 @@ impl<'a> LocalPlayer<'a> {
         CVector::zero()
     }
 
-    pub fn name(&self) -> Option<&str> {
+    pub fn name(&self) -> Option<String> {
         if let Some(player) = self.player_v1.as_ref() {
             return player.name();
         }
@@ -112,6 +112,7 @@ impl<'a> LocalPlayer<'a> {
     }
 }
 
+#[allow(unused)]
 pub struct PlayerPool<'a> {
     pool_v1: Option<&'a mut r1::CPlayerPool>,
     pool_v3: Option<&'a mut r3::CPlayerPool>,
@@ -214,7 +215,7 @@ impl<'a> Player<'a> {
         u64::max_value()
     }
 
-    pub fn name(&self) -> Option<&str> {
+    pub fn name(&self) -> Option<String> {
         if let Some(player) = self.player_v1.as_ref() {
             return player.name();
         }
@@ -380,24 +381,27 @@ pub fn find_player<'a>(id: i32) -> Option<Player<'a>> {
 pub fn players<'a>() -> Option<PlayersIterator<'a>> {
     match version() {
         Version::V037 => Some(PlayersIterator {
-            players_v1: r1::player_pool().map(|pool| pool.m_pObject.as_mut()),
+            players_v1: r1::player_pool().map(|pool| {pool.m_pObject}.to_vec()),
             players_v3: None,
             players_dl: None,
             index: 0,
+            lifetime_marker: std::marker::PhantomData,
         }),
 
         Version::V037R3 => Some(PlayersIterator {
-            players_v3: r3::player_pool().map(|pool| pool.m_pObject.as_mut()),
+            players_v3: r3::player_pool().map(|pool| {pool.m_pObject}.to_vec()),
             players_v1: None,
             players_dl: None,
             index: 0,
+            lifetime_marker: std::marker::PhantomData,
         }),
 
         Version::V03DLR1 => Some(PlayersIterator {
-            players_dl: dl::player_pool().map(|pool| pool.m_pObject.as_mut()),
+            players_dl: dl::player_pool().map(|pool| {pool.m_pObject}.to_vec()),
             players_v1: None,
             players_v3: None,
             index: 0,
+            lifetime_marker: std::marker::PhantomData,
         }),
 
         _ => None,
@@ -405,10 +409,11 @@ pub fn players<'a>() -> Option<PlayersIterator<'a>> {
 }
 
 pub struct PlayersIterator<'a> {
-    players_v1: Option<&'a mut [*mut r1::CPlayerInfo]>,
-    players_v3: Option<&'a mut [*mut r3::CPlayerInfo]>,
-    players_dl: Option<&'a mut [*mut dl::CPlayerInfo]>,
+    players_v1: Option<Vec<*mut r1::CPlayerInfo>>,
+    players_v3: Option<Vec<*mut r3::CPlayerInfo>>,
+    players_dl: Option<Vec<*mut dl::CPlayerInfo>>,
     index: usize,
+    lifetime_marker: std::marker::PhantomData<&'a ()>,
 }
 
 impl<'a> Iterator for PlayersIterator<'a> {
@@ -416,7 +421,7 @@ impl<'a> Iterator for PlayersIterator<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(players) = self.players_v1.as_ref() {
-            while self.index >= 0 && self.index < 1000 {
+            while self.index < 1000 {
                 if let Some(player) = players.get(self.index).filter(|player| !player.is_null()) {
                     self.index += 1;
                     return Some(Player::new_v1(unsafe { &mut **player }));
@@ -427,7 +432,7 @@ impl<'a> Iterator for PlayersIterator<'a> {
         }
 
         if let Some(players) = self.players_v3.as_ref() {
-            while self.index >= 0 && self.index < 1000 {
+            while self.index < 1000 {
                 if let Some(player) = players.get(self.index).filter(|player| !player.is_null()) {
                     self.index += 1;
                     return Some(Player::new_v3(unsafe { &mut **player }));
@@ -438,7 +443,7 @@ impl<'a> Iterator for PlayersIterator<'a> {
         }
 
         if let Some(players) = self.players_dl.as_ref() {
-            while self.index >= 0 && self.index < 1000 {
+            while self.index < 1000 {
                 if let Some(player) = players.get(self.index).filter(|player| !player.is_null()) {
                     self.index += 1;
                     return Some(Player::new_dl(unsafe { &mut **player }));

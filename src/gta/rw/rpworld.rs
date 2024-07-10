@@ -3,7 +3,9 @@ use super::rwcore::*;
 
 use std::ffi::c_void;
 
+#[allow(non_upper_case_globals)]
 pub const rpATOMIC: u8 = 1;
+#[allow(non_upper_case_globals)]
 pub const rpCLUMP: u8 = 2;
 
 pub type RpAtomicCallBack = Option<

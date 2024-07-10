@@ -1,5 +1,11 @@
-use super::{handle, CStdString, BOOL, D3DCOLOR, GTAREF, ID, NUMBER, TICK};
-use crate::gta::matrix::{CVector, RwMatrix};
+use super::{
+    // handle, CStdString, BOOL, D3DCOLOR, GTAREF,
+    ID,
+    // NUMBER, TICK
+};
+use crate::gta::matrix::{CVector,
+    // RwMatrix
+};
 
 #[repr(C, packed)]
 pub struct TrailerData {

@@ -2,7 +2,7 @@ use super::packets;
 use super::{handle, CStdString, BOOL, D3DCOLOR, GTAREF, ID, NUMBER, TICK};
 use crate::gta::matrix::{CVector, RwMatrix};
 
-use std::ffi::{c_void, CStr};
+// use std::ffi::{c_void, CStr};
 use std::net::{Ipv4Addr, SocketAddr};
 
 pub const CNETGAME: usize = 0x21A0F8;
@@ -15,7 +15,9 @@ pub const CDEATHWINDOW_DRAW: usize = 0x66640;
 
 const SPEC_MODE_VEHICLE: i8 = 3;
 const SPEC_MODE_PLAYER: i8 = 4;
+#[allow(unused)]
 const SPEC_MODE_FIXED: i8 = 15;
+#[allow(unused)]
 const SPEC_MODE_SIDE: i8 = 14;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
@@ -124,7 +126,7 @@ pub struct CVehiclePool {
 }
 
 #[repr(C, packed)]
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct CVehiclePool_Info {
     pub m_nId: ID,
     pub m_nType: std::os::raw::c_int,
@@ -142,7 +144,7 @@ pub struct CVehiclePool_Info {
 }
 
 #[repr(C, packed)]
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct CVehiclePool__bindgen_ty_1 {
     pub m_entry: [CVehiclePool_Info; 100],
     pub m_bNotEmpty: [BOOL; 100],
@@ -243,7 +245,7 @@ impl CPlayerInfo {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
 
-        self.m_szNick
+        {self.m_szNick}
             .as_str()
             .map(|name| {
                 let mut hasher = DefaultHasher::new();
@@ -253,17 +255,17 @@ impl CPlayerInfo {
             .unwrap_or(0)
     }
 
-    pub fn name(&self) -> Option<&str> {
-        self.m_szNick.as_str().ok()
+    pub fn name(&self) -> Option<String> {
+        Some({self.m_szNick}.to_string())
     }
 
     pub fn name_with_id(&self) -> String {
-        self.m_szNick
+        {self.m_szNick}
             .as_str()
             .ok()
             .and_then(|name| {
-                let remote = self.remote_player()?;
-                Some(format!("[ID: {}] {}", remote.m_nId, name))
+                let id = {self.remote_player()?.m_nId};
+                Some(format!("[ID: {}] {}", id, name))
             })
             .unwrap_or_else(|| "[ID: -1] bugged name".to_owned())
     }
@@ -389,7 +391,7 @@ pub struct CRemotePlayer__bindgen_ty_3 {
 }
 
 #[repr(C, packed)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Accessory {
     pub m_nModel: std::os::raw::c_int,
     pub m_nBone: std::os::raw::c_int,
@@ -583,8 +585,8 @@ impl CLocalPlayer {
         }
     }
 
-    pub fn name(&self) -> Option<&str> {
-        player_pool().and_then(|players| players.m_localInfo.m_szName.as_str().ok())
+    pub fn name(&self) -> Option<String> {
+        player_pool().and_then(|players| Some({players.m_localInfo.m_szName}.to_string()))
     }
 
     pub fn id(&self) -> Option<i32> {
@@ -672,7 +674,7 @@ pub struct CLocalPlayer__bindgen_ty_6 {
 }
 
 #[repr(C, packed)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct CSimpleTransform {
     pub m_vPosn: CVector,
     pub m_fHeading: f32,
@@ -770,10 +772,12 @@ pub fn netgame() -> *mut CNetGame {
 
 pub fn players<'a>() -> Option<impl Iterator<Item = &'a mut CPlayerInfo>> {
     player_pool().map(|pool| {
-        pool.m_pObject
+        {pool.m_pObject}
             .iter_mut()
             .filter(|player| !player.is_null())
             .map(|player| unsafe { &mut **player })
+            .collect::<Vec<&'a mut CPlayerInfo>>()
+            .into_iter()
     })
 }
 

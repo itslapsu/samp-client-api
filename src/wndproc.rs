@@ -1,9 +1,11 @@
 use winapi::shared::minwindef::{LPARAM, LRESULT, UINT, WPARAM};
 use winapi::shared::windef::HWND;
 use winapi::um::winnt::LONG;
-use winapi::um::winuser::{CallWindowProcA, FindWindowA, SetWindowLongPtrA, GWL_WNDPROC};
+use winapi::um::winuser::{CallWindowProcA,
+    // FindWindowA,
+    SetWindowLongPtrA, GWL_WNDPROC};
 
-use crate::samp::{gamestate, Gamestate};
+// use crate::samp::{gamestate, Gamestate};
 
 #[derive(Debug, Clone)]
 pub struct WndProcSettings {
@@ -15,7 +17,7 @@ struct WndProcData {
     callback: fn(),
     hwnd: HWND,
     prev_ptr: LONG,
-    additional_cb: Vec<Box<FnMut(UINT, WPARAM, LPARAM) -> bool + 'static>>,
+    additional_cb: Vec<Box<dyn FnMut(UINT, WPARAM, LPARAM) -> bool + 'static>>,
 }
 
 static mut WNDPROC_DATA: Option<WndProcData> = None;

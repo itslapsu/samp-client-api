@@ -1,5 +1,7 @@
 use std::ffi::CString;
-use winapi::shared::minwindef::{DWORD, FARPROC, HMODULE};
+use winapi::shared::minwindef::{DWORD,
+    // FARPROC,
+    HMODULE};
 use winapi::um::libloaderapi::{GetModuleHandleA, GetProcAddress, LoadLibraryA};
 use winapi::um::winuser::*;
 

@@ -3,7 +3,7 @@ use super::players::GamePed;
 use super::{handle, CStdString, BOOL, D3DCOLOR, GTAREF, ID, NUMBER, TICK};
 use crate::gta::matrix::{CVector, RwMatrix};
 
-use std::ffi::{c_void, CStr};
+// use std::ffi::{c_void, CStr};
 use std::net::{Ipv4Addr, SocketAddr};
 
 pub const CNETGAME: usize = 0x2ACA24;
@@ -16,7 +16,9 @@ pub const CDEATHWINDOW_DRAW: usize = 0x69D20;
 
 const SPEC_MODE_VEHICLE: i8 = 3;
 const SPEC_MODE_PLAYER: i8 = 4;
+#[allow(unused)]
 const SPEC_MODE_FIXED: i8 = 15;
+#[allow(unused)]
 const SPEC_MODE_SIDE: i8 = 14;
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
@@ -85,6 +87,7 @@ impl CNetGame {
     }
 }
 
+#[allow(non_camel_case_types)]
 pub struct CNetGame_Pools {
     pub m_pMenu: *mut (),
     pub m_pActor: *mut (),
@@ -163,7 +166,7 @@ impl CPlayerInfo {
         use std::collections::hash_map::DefaultHasher;
         use std::hash::{Hash, Hasher};
 
-        self.m_szNick
+        {self.m_szNick}
             .as_str()
             .map(|name| {
                 let mut hasher = DefaultHasher::new();
@@ -173,17 +176,17 @@ impl CPlayerInfo {
             .unwrap_or(0)
     }
 
-    pub fn name(&self) -> Option<&str> {
-        self.m_szNick.as_str().ok()
+    pub fn name(&self) -> Option<String> {
+        Some({self.m_szNick}.to_string())
     }
 
     pub fn name_with_id(&self) -> String {
-        self.m_szNick
+        {self.m_szNick}
             .as_str()
             .ok()
             .and_then(|name| {
-                let remote = self.remote_player()?;
-                Some(format!("[ID: {}] {}", remote.m_nId, name))
+                let id = {self.remote_player()?.m_nId};
+                Some(format!("[ID: {}] {}", id, name))
             })
             .unwrap_or_else(|| "[ID: -1] bugged name".to_owned())
     }
@@ -436,8 +439,8 @@ impl CLocalPlayer {
         }
     }
 
-    pub fn name(&self) -> Option<&str> {
-        player_pool().and_then(|players| players.m_localInfo.m_szName.as_str().ok())
+    pub fn name(&self) -> Option<String> {
+        player_pool().and_then(|players| Some({players.m_localInfo.m_szName}.to_string()))
     }
 
     pub fn id(&self) -> Option<i32> {
@@ -739,10 +742,12 @@ pub fn netgame() -> *mut CNetGame {
 
 pub fn players<'a>() -> Option<impl Iterator<Item = &'a mut CPlayerInfo>> {
     player_pool().map(|pool| {
-        pool.m_pObject
+        {pool.m_pObject}
             .iter_mut()
             .filter(|player| !player.is_null())
             .map(|player| unsafe { &mut **player })
+            .collect::<Vec<&'a mut CPlayerInfo>>()
+            .into_iter()
     })
 }
 
