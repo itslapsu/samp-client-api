@@ -2,7 +2,7 @@ use super::version::{version, Version};
 use super::{v037 as r1, v037r3 as r3, v03dlr1 as dl};
 use crate::gta::matrix::{CVector, RwMatrix};
 
-// #[repr(C, packed)]
+#[repr(C)]
 pub struct GamePed {
     pad: [u8; 20],
     pub matrix: *mut RwMatrix,

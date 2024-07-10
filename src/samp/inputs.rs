@@ -8,7 +8,7 @@ pub type CMDPROC = Option<unsafe extern "C" fn(arg1: *const std::os::raw::c_char
 const MAX_CLIENT_CMDS: usize = 144;
 const MAX_CMD_LENGTH: usize = 32;
 
-// #[repr(C, packed)]
+#[repr(C)]
 pub struct Input {
     pub m_pDevice: *mut (),  // IDirect3DDevice9
     pub m_pGameUi: *mut (),  // CDXUTDialog
@@ -59,7 +59,7 @@ pub struct DXUTControl {
     is_default: bool, // Is the default control
 }
 
-// #[repr(C, packed)]
+#[repr(C)]
 pub struct Dialog {
     pub m_pDevice: *mut (), // IDirect3DDevice9
     pub m_position: [std::os::raw::c_ulong; 2],
