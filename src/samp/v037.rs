@@ -41,7 +41,7 @@ impl From<u32> for Gamestate {
     }
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct CNetGame {
     pub unk_0: *mut (),
     pub server_info: *mut (),
@@ -83,7 +83,7 @@ impl CNetGame {
     }
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CNetGame_Pools {
     pub m_pActor: *mut (),
@@ -97,7 +97,7 @@ pub struct CNetGame_Pools {
     pub m_pPickup: *mut (),
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct CPlayerPool {
     pub m_nLargestId: std::os::raw::c_int,
     pub m_localInfo: CPlayerPool_Local,
@@ -106,7 +106,7 @@ pub struct CPlayerPool {
     pub m_bPrevCollisionFlag: [BOOL; 1004],
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct CVehiclePool {
     pub m_nCount: std::os::raw::c_int,
     pub m_waiting: CVehiclePool__bindgen_ty_1,
@@ -123,7 +123,7 @@ pub struct CVehiclePool {
     pub m_bNeedsToInitializeLicensePlates: BOOL,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Clone)]
 pub struct CVehiclePool_Info {
     pub m_nId: ID,
@@ -141,14 +141,14 @@ pub struct CVehiclePool_Info {
     pub m_bHasSiren: bool,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Clone)]
 pub struct CVehiclePool__bindgen_ty_1 {
     pub m_entry: [CVehiclePool_Info; 100],
     pub m_bNotEmpty: [BOOL; 100],
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct CVehicle {
     pub _base: CEntity,
     pub m_pTrailer: *mut CVehicle,
@@ -186,7 +186,7 @@ impl CVehicle {
     }
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CPlayerPool_Local {
     pub m_nId: ID,
@@ -197,7 +197,7 @@ pub struct CPlayerPool_Local {
     pub m_nScore: std::os::raw::c_int,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CPlayerInfo {
     pub m_pPlayer: *mut CRemotePlayer,
@@ -269,7 +269,7 @@ impl CPlayerInfo {
     }
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct CRemotePlayer {
     pub m_pPed: *mut CPed,
     pub m_pVehicle: *mut CVehicle,
@@ -365,14 +365,14 @@ impl CRemotePlayer {
     }
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CRemotePlayer__bindgen_ty_1 {
     pub real: f32,
     pub imag: CVector,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CRemotePlayer__bindgen_ty_2 {
     pub m_direction: CVector,
@@ -380,7 +380,7 @@ pub struct CRemotePlayer__bindgen_ty_2 {
     pub m_lastLook: TICK,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CRemotePlayer__bindgen_ty_3 {
     pub x: std::os::raw::c_int,
@@ -388,7 +388,7 @@ pub struct CRemotePlayer__bindgen_ty_3 {
     pub z: std::os::raw::c_int,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct Accessory {
     pub m_nModel: std::os::raw::c_int,
@@ -400,7 +400,7 @@ pub struct Accessory {
     pub m_secondMaterialColor: D3DCOLOR,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct CPed {
     pub _base: CEntity,
     pub m_bUsingCellphone: BOOL,
@@ -422,7 +422,7 @@ pub struct CPed {
     pub pad: [std::os::raw::c_char; 55],
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CPed__bindgen_ty_1 {
     pub m_bNotEmpty: [BOOL; 10],
@@ -430,7 +430,7 @@ pub struct CPed__bindgen_ty_1 {
     pub m_pObject: [*mut u8; 10],
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CPed__bindgen_ty_2 {
     pub m_nType: std::os::raw::c_int,
@@ -438,7 +438,7 @@ pub struct CPed__bindgen_ty_2 {
     pub m_nDrunkLevel: std::os::raw::c_int,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct CEntity {
     pub vtable_: *const u8,
     pub pad_4: [std::os::raw::c_char; 60],
@@ -446,7 +446,7 @@ pub struct CEntity {
     pub m_handle: GTAREF,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct CLocalPlayer {
     pub m_pPed: *mut CPed,
     pub m_animation: Animation,
@@ -592,7 +592,7 @@ impl CLocalPlayer {
     }
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CLocalPlayer_SpawnInfo {
     pub m_nTeam: NUMBER,
@@ -604,7 +604,7 @@ pub struct CLocalPlayer_SpawnInfo {
     pub m_aAmmo: [std::os::raw::c_int; 3],
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CLocalPlayer__bindgen_ty_1 {
     pub m_nAimedPlayer: ID,
@@ -614,7 +614,7 @@ pub struct CLocalPlayer__bindgen_ty_1 {
     pub m_aLastWeaponAmmo: [std::os::raw::c_int; 13],
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CLocalPlayer_CameraTarget {
     pub m_nObject: ID,
@@ -623,7 +623,7 @@ pub struct CLocalPlayer_CameraTarget {
     pub m_nActor: ID,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CLocalPlayer__bindgen_ty_2 {
     pub m_direction: CVector,
@@ -631,7 +631,7 @@ pub struct CLocalPlayer__bindgen_ty_2 {
     pub m_lastLook: TICK,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct CLocalPlayer__bindgen_ty_3 {
     pub m_bIsActive: BOOL,
     pub m_position: CVector,
@@ -643,7 +643,7 @@ pub struct CLocalPlayer__bindgen_ty_3 {
     pub m_nMode: std::os::raw::c_int,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CLocalPlayer__bindgen_ty_4 {
     pub m_bEnableAfterDeath: BOOL,
@@ -652,7 +652,7 @@ pub struct CLocalPlayer__bindgen_ty_4 {
     pub m_bIsActive: BOOL,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CLocalPlayer__bindgen_ty_5 {
     pub m_nMode: std::os::raw::c_char,
@@ -661,7 +661,7 @@ pub struct CLocalPlayer__bindgen_ty_5 {
     pub m_bProcessed: BOOL,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CLocalPlayer__bindgen_ty_6 {
     pub m_nVehicleUpdating: ID,
@@ -671,14 +671,14 @@ pub struct CLocalPlayer__bindgen_ty_6 {
     pub m_bWheel: std::os::raw::c_char,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CSimpleTransform {
     pub m_vPosn: CVector,
     pub m_fHeading: f32,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 #[derive(Debug)]
 pub struct CPlaceable {
     pub vtable_: *const (),
@@ -686,14 +686,14 @@ pub struct CPlaceable {
     pub m_matrix: *mut RwMatrix,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct CObjectPool {
     pub m_nLargestId: ::std::os::raw::c_int,
     pub m_bNotEmpty: [BOOL; 1000usize],
     pub m_pObject: [*mut CObject; 1000usize],
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct CObject {
     pub _base: CEntity,
     pub pad_0: [::std::os::raw::c_char; 6usize],
@@ -723,7 +723,7 @@ pub struct CObject {
     pub pad_9: [::std::os::raw::c_char; 10usize],
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct CObject__bindgen_ty_1 {
     pub __bindgen_anon_1: CObject__bindgen_ty_1__bindgen_ty_1,
     pub m_color: [D3DCOLOR; 16usize],
@@ -732,12 +732,12 @@ pub struct CObject__bindgen_ty_1 {
     pub m_text: CObject__bindgen_ty_1__bindgen_ty_2,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct CObject__bindgen_ty_1__bindgen_ty_1 {
     pub bindgen_union_field: [u8; 64usize],
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct CObject__bindgen_ty_1__bindgen_ty_2 {
     pub m_bTextureWasCreated: [BOOL; 16usize],
     pub m_textInfo: [CObject__bindgen_ty_1__bindgen_ty_2__bindgen_ty_1; 16usize],
@@ -746,7 +746,7 @@ pub struct CObject__bindgen_ty_1__bindgen_ty_2 {
     pub m_pTexture: [*mut (); 16usize],           // IDirect3DTexture9
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct CObject__bindgen_ty_1__bindgen_ty_2__bindgen_ty_1 {
     pub m_nMaterialIndex: ::std::os::raw::c_char,
     pub pad_0: [::std::os::raw::c_char; 137usize],
@@ -759,7 +759,7 @@ pub struct CObject__bindgen_ty_1__bindgen_ty_2__bindgen_ty_1 {
     pub m_align: ::std::os::raw::c_char,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 pub struct Animation {
     pub shit: u32,
 }

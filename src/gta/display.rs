@@ -3,7 +3,7 @@ use super::matrix::CVector;
 const DONT_DRAW_RADAR: *mut bool = 0xBAA3FB as *mut bool;
 
 #[repr(C)]
-// #[derive(Debug)]
+#[derive(Debug)]
 pub struct CSprite2d {
     pub m_pTexture: *mut (), // RwTexture
 }

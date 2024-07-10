@@ -3,7 +3,7 @@ use super::matrix::*;
 const CAMERA_PTR: *mut CCamera = 0xB6F028 as _;
 
 #[repr(C)]
-// #[derive(Debug)]
+#[derive(Debug)]
 pub struct CCam {
     pub m_bBelowMinDist: bool,
     pub m_bBehindPlayerDesired: bool,
@@ -114,8 +114,8 @@ pub struct CCam {
     pub m_bFirstPersonRunAboutActive: bool,
 }
 
-#[repr(C)]
-// #[derive(Debug)]
+#[repr(C, packed)]
+#[derive(Debug)]
 pub struct CQueuedMode {
     pub m_nMode: std::os::raw::c_ushort,
     pub m_fDuration: f32,
@@ -123,13 +123,13 @@ pub struct CQueuedMode {
     pub m_nMaxZoom: std::os::raw::c_ushort,
 }
 
-#[repr(C)]
-// #[derive(Debug)]
+#[repr(C, packed)]
+#[derive(Debug)]
 pub struct CCamPathSplines {
     pub m_pArrPathData: *mut f32,
 }
 
-#[repr(C)]
+#[repr(C, packed)]
 // #[derive(Debug)]
 pub struct CCamera {
     pub _base: CPlaceable,
@@ -410,7 +410,7 @@ pub struct CCamera {
 }
 
 #[repr(C)]
-// #[derive(Debug)]
+#[derive(Debug)]
 pub struct CCamera__bindgen_ty_1 {
     pub m_nModelIndex: std::os::raw::c_int,
     pub m_fDistance: f32,
