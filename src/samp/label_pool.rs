@@ -1,4 +1,4 @@
-use retour::GenericDetour;
+use detour::GenericDetour;
 
 use super::version::{version, Version};
 
