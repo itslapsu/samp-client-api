@@ -336,6 +336,10 @@ unsafe extern "system" fn Present(
     hDestWindowOverride: HWND,
     pDirtyRegion: *const RGNDATA,
 ) -> HRESULT {
+    if let Some(func) = RENDER_HOOK_FN {
+        func(device());
+    }
+
     (*D3D9_DEVICE).Present(pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion)
 }
 
@@ -628,10 +632,6 @@ unsafe extern "system" fn BeginScene(_this: *mut IDirect3DDevice9) -> HRESULT {
 }
 
 unsafe extern "system" fn EndScene(_this: *mut IDirect3DDevice9) -> HRESULT {
-    if let Some(func) = RENDER_HOOK_FN {
-        func(device());
-    }
-
     (*D3D9_DEVICE).EndScene()
 }
 
