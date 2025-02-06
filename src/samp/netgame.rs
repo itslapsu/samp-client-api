@@ -202,7 +202,7 @@ extern "thiscall" fn cnetgame_closed_connection(this: *mut (), packet: *mut ()) 
     unsafe {
         if let Some(hook) = CLOSED_CONNECTION_HOOK.as_mut() {
             (hook.callback)();  // Вызов callback
-            hook.hook.call(this); // Вызов оригинальной функции
+            hook.hook.call(this, packet); // Вызов оригинальной функции
         }
     }
 }
