@@ -236,6 +236,30 @@ impl<'a> NetGame<'a> {
                 });
         }
     }
+
+    pub fn connection_rejected<F: FnMut() + 'static>(callback: F) {
+        let address = match version() {
+            Version::V037 => 0xA500,   //hz
+            Version::V037R3 => 0x10200,  
+            Version::V03DLR1 => 0xA600, //hz
+            _ => return,
+        };
+    
+        unsafe {
+            let ptr = super::handle().add(address);
+            let func: extern "thiscall" fn(*mut ()) = std::mem::transmute(ptr);
+    
+            let _ = GenericDetour::new(func, cnetgame_connection_rejected)
+                .map(|hook| {
+                    let _ = hook.enable();
+    
+                    CONNECTION_REJECTED_HOOK = Some(CNetGameConnectionRejectedHook {
+                        hook,
+                        callback: Box::new(callback),
+                    });
+                });
+        }
+    }
 }
 
 struct CNetGameDestroyHook {
@@ -346,6 +370,22 @@ extern "thiscall" fn cnetgame_on_banned(this: *mut (), packet: *mut ()) {
         if let Some(hook) = ON_BANNED_HOOK.as_mut() {
             (hook.callback)(); 
             hook.hook.call(this, packet);
+        }
+    }
+}
+
+struct CNetGameConnectionRejectedHook {
+    hook: GenericDetour<extern "thiscall" fn(*mut ())>,
+    callback: Box<dyn FnMut()>,
+}
+
+static mut CONNECTION_REJECTED_HOOK: Option<CNetGameConnectionRejectedHook> = None;
+
+extern "thiscall" fn cnetgame_connection_rejected(this: *mut ()) {
+    unsafe {
+        if let Some(hook) = CONNECTION_REJECTED_HOOK.as_mut() {
+            (hook.callback)();
+            hook.hook.call(this);
         }
     }
 }
