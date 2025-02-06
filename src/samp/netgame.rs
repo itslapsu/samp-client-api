@@ -198,7 +198,7 @@ struct CNetGameClosedConnectionHook {
 
 static mut CLOSED_CONNECTION_HOOK: Option<CNetGameClosedConnectionHook> = None;
 
-extern "thiscall" fn cnetgame_closed_connection(this: *mut ()) {
+extern "thiscall" fn cnetgame_closed_connection(this: *mut (), packet: *mut ()) {
     unsafe {
         if let Some(hook) = CLOSED_CONNECTION_HOOK.as_mut() {
             (hook.callback)();  // Вызов callback
