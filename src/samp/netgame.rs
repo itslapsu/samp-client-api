@@ -46,6 +46,29 @@ impl<'a> NetGame<'a> {
         }
     }
 
+    pub fn quit_game(&self) {
+        let address = match version() {
+            Version::V037 => 0x68270, //hz
+            Version::V037R3 => 0x68270, 
+            Version::V03DLR1 => 0x68270, //hz
+            _ => return,
+        };
+
+        unsafe {
+            let ptr = super::handle().add(address);
+            let quit_func: extern "thiscall" fn(*mut ()) = std::mem::transmute(ptr);
+            
+            match version() {
+                Version::V037R3 => {
+                    if let Some(netgame) = self.netgame_v3.as_ref() {
+                        quit_func(netgame as *const _ as *mut ());
+                    }
+                },
+                _ => {}
+            }
+        }
+    }
+
     pub fn on_destroy<F: FnMut() + 'static>(callback: F) {
         let address = match version() {
             Version::V037 => 0x9380,
