@@ -231,6 +231,11 @@ extern "thiscall" fn cnetgame_closed_connection(this: *mut (), packet: *mut ()) 
     }
 }
 
+struct CNetGameServerFullHook {
+    hook: GenericDetour<extern "thiscall" fn(*mut (), *mut ())>,
+    callback: Box<dyn FnMut()>,
+}
+
 static mut SERVER_FULL_HOOK: Option<CNetGameServerFullHook> = None;
 
 extern "thiscall" fn cnetgame_server_full(this: *mut (), packet: *mut ()) {
