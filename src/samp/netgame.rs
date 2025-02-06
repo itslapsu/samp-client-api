@@ -141,6 +141,30 @@ impl<'a> NetGame<'a> {
                 });
         }
     }
+
+    pub fn server_is_full<F: FnMut() + 'static>(callback: F) {
+        let address = match version() {
+            Version::V037 => 0xA500,   //hz
+            Version::V037R3 => 0x8A40,  
+            Version::V03DLR1 => 0xA600, //hz
+            _ => return,
+        };
+    
+        unsafe {
+            let ptr = super::handle().add(address);
+            let func: extern "thiscall" fn(*mut (), *mut ()) = std::mem::transmute(ptr);
+    
+            let _ = GenericDetour::new(func, cnetgame_server_full)
+                .map(|hook| {
+                    let _ = hook.enable();
+    
+                    SERVER_FOOL_HOOK = Some(CNetGameServerFoolHook {
+                        hook,
+                        callback: Box::new(callback),
+                    });
+                });
+        }
+    }
 }
 
 struct CNetGameDestroyHook {
@@ -201,6 +225,17 @@ static mut CLOSED_CONNECTION_HOOK: Option<CNetGameClosedConnectionHook> = None;
 extern "thiscall" fn cnetgame_closed_connection(this: *mut (), packet: *mut ()) {
     unsafe {
         if let Some(hook) = CLOSED_CONNECTION_HOOK.as_mut() {
+            (hook.callback)();  // Вызов callback
+            hook.hook.call(this, packet); // Вызов оригинальной функции
+        }
+    }
+}
+
+static mut SERVER_FOOL_HOOK_HOOK: Option<CNetGameServerFoolHook> = None;
+
+extern "thiscall" fn cnetgame_server_full(this: *mut (), packet: *mut ()) {
+    unsafe {
+        if let Some(hook) = SERVER_FOOL_HOOK_HOOK.as_mut() {
             (hook.callback)();  // Вызов callback
             hook.hook.call(this, packet); // Вызов оригинальной функции
         }
