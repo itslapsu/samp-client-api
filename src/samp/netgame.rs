@@ -192,7 +192,7 @@ extern "thiscall" fn cnetgame_reconnect(this: *mut ()) {
 }
 
 struct CNetGameClosedConnectionHook {
-    hook: GenericDetour<extern "thiscall" fn(*mut ())>,
+    hook: GenericDetour<extern "thiscall" fn(*mut (), *mut ())>,
     callback: Box<dyn FnMut()>,
 }
 
