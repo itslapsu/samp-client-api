@@ -188,6 +188,30 @@ impl<'a> NetGame<'a> {
                 });
         }
     }
+
+    pub fn wrong_password<F: FnMut() + 'static>(callback: F) {
+        let address = match version() {
+            Version::V037 => 0xA500,   //hz
+            Version::V037R3 => 0x8AB0,  
+            Version::V03DLR1 => 0xA600, //hz
+            _ => return,
+        };
+    
+        unsafe {
+            let ptr = super::handle().add(address);
+            let func: extern "thiscall" fn(*mut (), *mut ()) = std::mem::transmute(ptr);
+    
+            let _ = GenericDetour::new(func, cnetgame_wrong_password)
+                .map(|hook| {
+                    let _ = hook.enable();
+    
+                    WRONG_PASSWORD_HOOK = Some(CNetGameWrongPasswordHook {
+                        hook,
+                        callback: Box::new(callback),
+                    });
+                });
+        }
+    }
 }
 
 struct CNetGameDestroyHook {
@@ -248,8 +272,8 @@ static mut CLOSED_CONNECTION_HOOK: Option<CNetGameClosedConnectionHook> = None;
 extern "thiscall" fn cnetgame_closed_connection(this: *mut (), packet: *mut ()) {
     unsafe {
         if let Some(hook) = CLOSED_CONNECTION_HOOK.as_mut() {
-            (hook.callback)();  // Вызов callback
-            hook.hook.call(this, packet); // Вызов оригинальной функции
+            (hook.callback)(); 
+            hook.hook.call(this, packet);
         }
     }
 }
@@ -264,8 +288,24 @@ static mut SERVER_FULL_HOOK: Option<CNetGameServerFullHook> = None;
 extern "thiscall" fn cnetgame_server_full(this: *mut (), packet: *mut ()) {
     unsafe {
         if let Some(hook) = SERVER_FULL_HOOK.as_mut() {
-            (hook.callback)();  // Вызов callback
-            hook.hook.call(this, packet); // Вызов оригинальной функции
+            (hook.callback)();  
+            hook.hook.call(this, packet); 
+        }
+    }
+}
+
+struct CNetGameWrongPasswordHook {
+    hook: GenericDetour<extern "thiscall" fn(*mut (), *mut ())>,
+    callback: Box<dyn FnMut()>,
+}
+
+static mut WRONG_PASSWORD_HOOK: Option<CNetGameWrongPasswordHook> = None;
+
+extern "thiscall" fn cnetgame_wrong_password(this: *mut (), packet: *mut ()) {
+    unsafe {
+        if let Some(hook) = WRONG_PASSWORD_HOOK.as_mut() {
+            (hook.callback)(); 
+            hook.hook.call(this, packet);
         }
     }
 }
