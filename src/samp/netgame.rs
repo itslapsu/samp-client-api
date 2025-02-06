@@ -408,8 +408,8 @@ static mut CONNECTION_REJECTED_HOOK: Option<CNetGameConnectionRejectedHook> = No
 extern "thiscall" fn cnetgame_connection_rejected(this: *mut ()) {
     unsafe {
         if let Some(hook) = CONNECTION_REJECTED_HOOK.as_mut() {
-            (hook.callback)();
-            hook.hook.call(this);
+            hook.hook.call(this);  // Вызов оригинальной функции ПЕРВЫМ
+            (hook.callback)();     // Затем колбэк
         }
     }
 }
@@ -424,8 +424,8 @@ static mut ON_INIT_CONNECT_HOOK: Option<CNetGameOnInitConnectHook> = None;
 extern "thiscall" fn cnetgame_on_init_connect(this: *mut ()) {
     unsafe {
         if let Some(hook) = ON_INIT_CONNECT_HOOK.as_mut() {
-            (hook.callback)();
-            hook.hook.call(this);
+            hook.hook.call(this);  // Вызов оригинальной функции ПЕРВЫМ
+            (hook.callback)();     // Затем колбэк
         }
     }
 }
