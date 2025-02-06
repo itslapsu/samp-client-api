@@ -128,7 +128,7 @@ impl<'a> NetGame<'a> {
     
         unsafe {
             let ptr = super::handle().add(address);
-            let func: extern "thiscall" fn(this: *mut ()) = std::mem::transmute(ptr);
+            let func: extern "thiscall" fn(*mut (), *mut ()) = std::mem::transmute(ptr);
     
             let _ = GenericDetour::new(func, cnetgame_closed_connection)
                 .map(|hook| {
