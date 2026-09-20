@@ -116,7 +116,21 @@ impl Dialog {
     }
 }
 
-pub fn show_cursor(show: bool) {
+// Режимы курсора SA-MP (CGame::SetCursorMode)
+pub mod cursor_mode {
+    // курсора нет, ввод и камера свободны
+    pub const NONE: i32 = 0;
+    // клавиши заблокированы, курсора нет, камера свободна
+    pub const LOCK_KEYS_NO_CURSOR: i32 = 1;
+    // курсор виден, камера и управление персонажем заблокированы
+    pub const LOCK_CAM_AND_CONTROL: i32 = 2;
+    // курсор виден, камера заблокирована, управление персонажем свободно
+    pub const LOCK_CAM: i32 = 3;
+    // курсора нет, камера заблокирована
+    pub const LOCK_CAM_NO_CURSOR: i32 = 4;
+}
+
+pub fn set_cursor_mode(mode: i32, hide_immediately: bool) {
     if Input::is_active() {
         return;
     }
@@ -156,13 +170,19 @@ pub fn show_cursor(show: bool) {
         let process_input_enabling: extern "thiscall" fn(*mut c_void) =
             std::mem::transmute(samp_base.add(process_addr));
 
-        let mode = if show { 2 } else { 0 };
-        let force_hide = if show { 0 } else { 1 };
+        set_cursor_mode(cgame, mode, hide_immediately as BOOL);
 
-        set_cursor_mode(cgame, mode, force_hide);
-
-        if !show {
+        // Режимы, в которых управление персонажем свободно, сразу возвращают его игроку
+        if mode == cursor_mode::NONE || mode == cursor_mode::LOCK_CAM {
             process_input_enabling(cgame);
         }
+    }
+}
+
+pub fn show_cursor(show: bool) {
+    if show {
+        set_cursor_mode(cursor_mode::LOCK_CAM_AND_CONTROL, false);
+    } else {
+        set_cursor_mode(cursor_mode::NONE, true);
     }
 }
