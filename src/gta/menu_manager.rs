@@ -1,8 +1,28 @@
+use retour::GenericDetour;
+
 use super::display::CSprite2d;
 use super::matrix::CVector2D;
 
 const MENU_MANAGER: usize = 0xBA6748;
 const MAX_VOLUME: i8 = 64;
+const PROCESS: usize = 0x57B440; // CMenuManager::Process(), thiscall, без аргументов
+
+// Глобалы вне CMenuManager (мышь, звук машины мышью) и нативные функции "применить" для настроек,
+// которые не сводятся к простой записи поля — см. CEF PauseMenu::Настройки
+const MOUSE_ACCEL_HORZNTL: usize = 0xB6EC1C; // f32, CCamera::m_fMouseAccelHorzntl
+const INVERT_MOUSE_Y: usize = 0xBA6745; // bool, bInvertMouseY
+const VEHICLE_MOUSE_STEERING: usize = 0xC1CC02; // bool, CVehicle::m_bEnableMouseSteering
+const VEHICLE_MOUSE_FLYING: usize = 0xC1CC03; // bool, CVehicle::m_bEnableMouseFlying
+const LOD_DIST_SCALE: usize = 0x8CD800; // f32, CRenderer::ms_lodDistScale
+const GAMMA: usize = 0xC92134; // CGamma instance
+const GAMMA_SET_GAMMA: usize = 0x747200; // CGamma::SetGamma(float, bool), thiscall
+const RW_TEXTURE_SET_MIPMAPPING: usize = 0x7F3530; // RwBool __cdecl(RwBool)
+const RW_D3D9_CHANGE_MULTISAMPLING_LEVELS: usize = 0x7F8A90; // RwBool __cdecl(RwUInt32)
+const RW_D3D9_GET_MAX_MULTISAMPLING_LEVELS: usize = 0x7F84E0; // RwUInt32 __cdecl(void)
+const SET_VIDEO_MODE: usize = 0x745C70; // void __cdecl(int32) — пересоздаёт D3D9-буфер
+const GET_VIDEO_MODE_LIST: usize = 0x745AF0; // char** __cdecl(void)
+const GET_NUM_VIDEO_MODES: usize = 0x7F2CC0; // RwInt32 __cdecl(void)
+const SAVE_SETTINGS: usize = 0x57C660; // CMenuManager::SaveSettings(), thiscall, пишет gta_sa.set
 
 #[repr(C)]
 pub struct CMenuManager {
@@ -209,6 +229,232 @@ impl CMenuManager {
 
     pub fn is_menu_active() -> bool {
         Self::get().is_active()
+    }
+
+    pub fn set_dont_draw_frontend(value: bool) {
+        unsafe { (*(MENU_MANAGER as *mut CMenuManager)).m_bDontDrawFrontEnd = value; }
+    }
+
+    pub fn set_menu_active(value: bool) {
+        unsafe { (*(MENU_MANAGER as *mut CMenuManager)).m_bMenuActive = value; }
+    }
+
+    // ---- Настройки игры (видео/звук/управление), см. CEF PauseMenu::Настройки ----
+    // Часть значений — просто поля CMenuManager (виджет/пад), часть требует отдельного нативного
+    // вызова "применить" (звук, mip-маппинг, сглаживание, яркость) — поле само по себе ничего не
+    // меняет. Смена разрешения намеренно не реализована: небезопасно вызывать смену видеорежима
+    // (device reset) без возможности проверить в игре.
+
+    pub fn widescreen() -> bool { unsafe { (*(MENU_MANAGER as *const CMenuManager)).m_bWidescreenOn } }
+    pub fn set_widescreen(value: bool) { unsafe { (*(MENU_MANAGER as *mut CMenuManager)).m_bWidescreenOn = value; } }
+
+    pub fn frame_limiter() -> bool { unsafe { (*(MENU_MANAGER as *const CMenuManager)).m_bFrameLimiterOn } }
+    pub fn set_frame_limiter(value: bool) { unsafe { (*(MENU_MANAGER as *mut CMenuManager)).m_bFrameLimiterOn = value; } }
+
+    pub fn draw_distance() -> f32 { unsafe { (*(MENU_MANAGER as *const CMenuManager)).m_fDrawDistance } }
+    pub fn set_draw_distance(value: f32) {
+        unsafe {
+            (*(MENU_MANAGER as *mut CMenuManager)).m_fDrawDistance = value;
+            *(LOD_DIST_SCALE as *mut f32) = value; // CRenderer::ms_lodDistScale — иначе значение не подействует
+        }
+    }
+
+    pub fn mipmapping() -> bool { unsafe { (*(MENU_MANAGER as *const CMenuManager)).m_bMipMapping } }
+    pub fn set_mipmapping(value: bool) {
+        unsafe {
+            (*(MENU_MANAGER as *mut CMenuManager)).m_bMipMapping = value;
+            let apply: extern "cdecl" fn(i32) -> i32 = std::mem::transmute(RW_TEXTURE_SET_MIPMAPPING);
+            apply(value as i32);
+        }
+    }
+
+    // ПОЛЕ + РЕАЛЬНОЕ ПРИМЕНЕНИЕ: применение сглаживания требует IDirect3DDevice9::Reset() (через
+    // SetVideoMode/RwD3D9ChangeVideoMode) — дважды крашило игру под SA-MP при следующей отрисовке
+    // текста на объекте (samp.dll!CObjectMaterialText::Create, m_pSprite становится нулевым — SA-MP
+    // не пересоздаёт свои D3DPOOL_DEFAULT-ресурсы на сторонний Reset). Третья попытка: сам Reset
+    // теперь оборачивается EndScene/BeginScene на стороне cef-plugin (render.rs::apply_antialiasing) —
+    // там же есть доступ к устройству D3D9 напрямую. Эта функция только пишет поля; реальный вызов
+    // смотри в cef-plugin. См. память cef-pausemenu
+    pub fn antialiasing() -> i32 { unsafe { (*(MENU_MANAGER as *const CMenuManager)).m_nAntiAliasingLevel } }
+    pub fn max_antialiasing() -> i32 {
+        unsafe {
+            let get_max: extern "cdecl" fn() -> u32 = std::mem::transmute(RW_D3D9_GET_MAX_MULTISAMPLING_LEVELS);
+            (get_max().min(4)) as i32
+        }
+    }
+    pub fn write_antialiasing_fields(level: i32) {
+        unsafe {
+            (*(MENU_MANAGER as *mut CMenuManager)).m_nAntiAliasingLevel = level;
+            (*(MENU_MANAGER as *mut CMenuManager)).m_nAppliedAntiAliasingLevel = level;
+        }
+    }
+    pub fn applied_resolution() -> i32 { unsafe { (*(MENU_MANAGER as *const CMenuManager)).m_nAppliedResolution } }
+    pub fn write_resolution_field(mode: i32) {
+        unsafe {
+            (*(MENU_MANAGER as *mut CMenuManager)).m_nAppliedResolution = mode;
+            (*(MENU_MANAGER as *mut CMenuManager)).m_nResolution = mode;
+        }
+    }
+
+    // Список доступных видеорежимов (те, что GetVideoModeList не пометил недоступными — часть
+    // индексов бывает null, это нормально). Индекс в паре — реальный индекс режима для SetVideoMode,
+    // не позиция в списке (пропуски возможны)
+    pub fn video_modes() -> Vec<(i32, String)> {
+        unsafe {
+            let count_fn: extern "cdecl" fn() -> i32 = std::mem::transmute(GET_NUM_VIDEO_MODES);
+            let count = count_fn();
+            if count <= 0 {
+                return Vec::new();
+            }
+
+            let list_fn: extern "cdecl" fn() -> *mut *mut std::os::raw::c_char = std::mem::transmute(GET_VIDEO_MODE_LIST);
+            let list = list_fn();
+            if list.is_null() {
+                return Vec::new();
+            }
+
+            let mut all = Vec::new();
+            for i in 0..count {
+                let ptr = *list.offset(i as isize);
+                if ptr.is_null() {
+                    continue;
+                }
+                let label = std::ffi::CStr::from_ptr(ptr).to_string_lossy().into_owned();
+                all.push((i, label));
+            }
+
+            // Метка режима — только "W X H X BPP" (без частоты обновления), поэтому один и тот же
+            // W/H/BPP на разных частотах даёт несколько одинаковых на вид записей подряд — оставляем
+            // одну на каждую метку. Если среди дублей есть текущий применённый режим, оставляем
+            // именно его (иначе выпадающий список показал бы не тот индекс как "текущий")
+            let current = (*(MENU_MANAGER as *const CMenuManager)).m_nAppliedResolution;
+            let mut by_label: std::collections::HashMap<String, i32> = std::collections::HashMap::new();
+            for (index, label) in &all {
+                by_label
+                    .entry(label.clone())
+                    .and_modify(|kept| if *index == current { *kept = *index })
+                    .or_insert(*index);
+            }
+
+            let mut modes: Vec<(i32, String)> = Vec::new();
+            let mut added = std::collections::HashSet::new();
+            for (index, label) in all {
+                if by_label.get(&label) == Some(&index) && added.insert(label.clone()) {
+                    modes.push((index, label));
+                }
+            }
+            modes
+        }
+    }
+
+    // Диапазон совпадает с ползунком в игре: примерно 0..1024 (native / 512.0 = уровень гаммы)
+    pub fn brightness() -> i32 { unsafe { (*(MENU_MANAGER as *const CMenuManager)).m_nBrightness } }
+    pub fn set_brightness(value: i32) {
+        unsafe {
+            (*(MENU_MANAGER as *mut CMenuManager)).m_nBrightness = value;
+            let apply: extern "thiscall" fn(*mut (), f32, i32) = std::mem::transmute(GAMMA_SET_GAMMA);
+            apply(GAMMA as *mut (), value as f32 / 512.0, 0);
+        }
+    }
+
+    // 0..MAX_VOLUME (64), см. sfx_volume() для варианта в долях (0..1)
+    pub fn set_sfx_volume(value: i8) {
+        unsafe { (*(MENU_MANAGER as *mut CMenuManager)).m_nSfxVolume = value; }
+        crate::gta::audio_engine::AudioEngine::set_effects_master_volume(value);
+    }
+
+    // Доля 0..1, как sfx_volume() — родное поле хранит 0..MAX_VOLUME (64)
+    pub fn radio_volume() -> f32 {
+        unsafe { (*(MENU_MANAGER as *const CMenuManager)).m_nRadioVolume as f32 / MAX_VOLUME as f32 }
+    }
+    pub fn set_radio_volume(value: i8) {
+        unsafe { (*(MENU_MANAGER as *mut CMenuManager)).m_nRadioVolume = value; }
+        crate::gta::audio_engine::AudioEngine::set_music_master_volume(value);
+    }
+
+    pub fn radio_eq() -> bool { unsafe { (*(MENU_MANAGER as *const CMenuManager)).m_bRadioEq } }
+    pub fn set_radio_eq(value: bool) {
+        unsafe { (*(MENU_MANAGER as *mut CMenuManager)).m_bRadioEq = value; }
+        crate::gta::audio_engine::AudioEngine::set_bass_enhance(value);
+    }
+
+    pub fn radio_auto_select() -> bool { unsafe { (*(MENU_MANAGER as *const CMenuManager)).m_bRadioAutoSelect } }
+    pub fn set_radio_auto_select(value: bool) {
+        unsafe { (*(MENU_MANAGER as *mut CMenuManager)).m_bRadioAutoSelect = value; }
+        crate::gta::audio_engine::AudioEngine::set_radio_auto_retune(value);
+    }
+
+    pub fn radio_station() -> i8 { unsafe { (*(MENU_MANAGER as *const CMenuManager)).m_nRadioStation } }
+    pub fn set_radio_station(value: i8) {
+        unsafe { (*(MENU_MANAGER as *mut CMenuManager)).m_nRadioStation = value; }
+        crate::gta::audio_engine::AudioEngine::retune_radio(value);
+    }
+
+    // Инверсия/своп стика геймпада, порт 1/2 (в игре хранятся как char 0/1, не bool)
+    pub fn pad_invert_x1() -> bool { unsafe { (*(MENU_MANAGER as *const CMenuManager)).invertPadX1 != 0 } }
+    pub fn set_pad_invert_x1(v: bool) { unsafe { (*(MENU_MANAGER as *mut CMenuManager)).invertPadX1 = v as i8; } }
+    pub fn pad_invert_y1() -> bool { unsafe { (*(MENU_MANAGER as *const CMenuManager)).invertPadY1 != 0 } }
+    pub fn set_pad_invert_y1(v: bool) { unsafe { (*(MENU_MANAGER as *mut CMenuManager)).invertPadY1 = v as i8; } }
+    pub fn pad_invert_x2() -> bool { unsafe { (*(MENU_MANAGER as *const CMenuManager)).invertPadX2 != 0 } }
+    pub fn set_pad_invert_x2(v: bool) { unsafe { (*(MENU_MANAGER as *mut CMenuManager)).invertPadX2 = v as i8; } }
+    pub fn pad_invert_y2() -> bool { unsafe { (*(MENU_MANAGER as *const CMenuManager)).invertPadY2 != 0 } }
+    pub fn set_pad_invert_y2(v: bool) { unsafe { (*(MENU_MANAGER as *mut CMenuManager)).invertPadY2 = v as i8; } }
+    pub fn pad_swap_axis1() -> bool { unsafe { (*(MENU_MANAGER as *const CMenuManager)).swapPadAxis1 != 0 } }
+    pub fn set_pad_swap_axis1(v: bool) { unsafe { (*(MENU_MANAGER as *mut CMenuManager)).swapPadAxis1 = v as i8; } }
+    pub fn pad_swap_axis2() -> bool { unsafe { (*(MENU_MANAGER as *const CMenuManager)).swapPadAxis2 != 0 } }
+    pub fn set_pad_swap_axis2(v: bool) { unsafe { (*(MENU_MANAGER as *mut CMenuManager)).swapPadAxis2 = v as i8; } }
+
+    // Мышь и управление машиной мышью — глобалы вне CMenuManager
+    pub fn mouse_sensitivity() -> f32 { unsafe { *(MOUSE_ACCEL_HORZNTL as *const f32) } }
+    pub fn set_mouse_sensitivity(value: f32) { unsafe { *(MOUSE_ACCEL_HORZNTL as *mut f32) = value; } }
+
+    pub fn mouse_invert_y() -> bool { unsafe { *(INVERT_MOUSE_Y as *const bool) } }
+    pub fn set_mouse_invert_y(value: bool) { unsafe { *(INVERT_MOUSE_Y as *mut bool) = value; } }
+
+    pub fn vehicle_mouse_steering() -> bool { unsafe { *(VEHICLE_MOUSE_STEERING as *const bool) } }
+    pub fn set_vehicle_mouse_steering(value: bool) { unsafe { *(VEHICLE_MOUSE_STEERING as *mut bool) = value; } }
+
+    pub fn vehicle_mouse_flying() -> bool { unsafe { *(VEHICLE_MOUSE_FLYING as *const bool) } }
+    pub fn set_vehicle_mouse_flying(value: bool) { unsafe { *(VEHICLE_MOUSE_FLYING as *mut bool) = value; } }
+
+    // Пишет gta_sa.set (родной формат игры) — то же самое, что штатное сохранение настроек
+    pub fn save_settings() {
+        unsafe {
+            let func: extern "thiscall" fn(*mut ()) = std::mem::transmute(SAVE_SETTINGS);
+            func(MENU_MANAGER as *mut ());
+        }
+    }
+
+    // Полностью отключает нативное меню паузы GTA:SA (детур CMenuManager::Process): пока выключено,
+    // игра ни разу не заходит в CheckForMenuClosing — ESC никак не активирует/не закрывает нативное
+    // меню, не проигрывает его звук и не останавливает обработку персонажа этим флагом. Вызывать один
+    // раз при старте (install), дальше только переключать set_native_menu_enabled по кадрам.
+    pub fn install_process_hook() {
+        unsafe {
+            let original: extern "thiscall" fn(*mut ()) = std::mem::transmute(PROCESS);
+            if let Ok(hook) = GenericDetour::new(original, process_hook) {
+                let _ = hook.enable();
+                PROCESS_HOOK = Some(hook);
+            }
+        }
+    }
+
+    pub fn set_native_menu_enabled(enabled: bool) {
+        unsafe { NATIVE_MENU_ENABLED = enabled; }
+    }
+}
+
+static mut PROCESS_HOOK: Option<GenericDetour<extern "thiscall" fn(*mut ())>> = None;
+static mut NATIVE_MENU_ENABLED: bool = true;
+
+extern "thiscall" fn process_hook(this: *mut ()) {
+    unsafe {
+        if !NATIVE_MENU_ENABLED {
+            return;
+        }
+        if let Some(hook) = PROCESS_HOOK.as_ref() {
+            hook.call(this);
+        }
     }
 }
 

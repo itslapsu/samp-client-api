@@ -1,6 +1,8 @@
 use winapi::shared::windef::HWND;
 
+pub mod audio_engine;
 pub mod camera;
+pub mod controller_config;
 pub mod d3d9;
 pub mod d9_proxy;
 pub mod device_proxy;
@@ -11,6 +13,7 @@ pub mod matrix;
 pub mod menu_manager;
 pub mod object;
 pub mod physical;
+pub mod radar;
 pub mod rw;
 pub mod sprite;
 pub mod world;
