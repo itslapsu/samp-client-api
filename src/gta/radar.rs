@@ -37,6 +37,16 @@ impl RadarTrace {
     pub fn is_tracking(&self) -> bool {
         self.flags1 & 0b10 != 0
     }
+
+    // m_nBlipDisplayFlag - младшие 2 бита flags2: 0 - не показывается, 1 - только маркер, 2 - только блип, 3 - оба
+    pub fn display(&self) -> u8 {
+        self.flags2 & 0b11
+    }
+
+    // m_nBlipType - биты 2..5 flags2 (eBlipType): 1 - машина, 2 - педик, 3 - объект, 4 - координаты (чекпоинт), 7 - пикап
+    pub fn blip_type(&self) -> u8 {
+        (self.flags2 >> 2) & 0xF
+    }
 }
 
 const _: () = assert!(std::mem::size_of::<RadarTrace>() == 0x28);
