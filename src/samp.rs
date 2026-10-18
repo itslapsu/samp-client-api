@@ -1,4 +1,5 @@
 pub mod audio_stream;
+pub mod chat;
 pub mod deathwindow;
 pub mod inputs;
 pub mod label_pool;
