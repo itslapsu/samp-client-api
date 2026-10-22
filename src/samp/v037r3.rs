@@ -766,13 +766,54 @@ pub fn find_player<'a>(player_id: i32) -> Option<&'a CPlayerInfo> {
     }
 }
 
+/// `SampVehiclePoolObject` exported by samp_vehicle_patch.asi. The patch raises the vehicle
+/// limit of samp.dll above the 2000 elements of `CVehiclePool`, and the pool arrays are no
+/// longer filled for the new ids.
+type ExtendedVehicleLookup = unsafe extern "C" fn(u16) -> *mut CVehicle;
+
+fn extended_vehicle_lookup() -> Option<ExtendedVehicleLookup> {
+    use std::sync::OnceLock;
+    use winapi::um::libloaderapi::{GetModuleHandleA, GetProcAddress};
+
+    static LOOKUP: OnceLock<Option<usize>> = OnceLock::new();
+
+    let address = *LOOKUP.get_or_init(|| unsafe {
+        let module = GetModuleHandleA(b"samp_vehicle_patch.asi\0".as_ptr() as *const _);
+        if module.is_null() {
+            return None;
+        }
+
+        let function = GetProcAddress(module, b"SampVehiclePoolObject\0".as_ptr() as *const _);
+        if function.is_null() {
+            None
+        } else {
+            Some(function as usize)
+        }
+    });
+
+    address.map(|address| unsafe { std::mem::transmute::<usize, ExtendedVehicleLookup>(address) })
+}
+
 pub fn find_vehicle<'a>(vehicle_id: i32) -> Option<&'a mut CVehicle> {
-    if vehicle_id < 0 || vehicle_id > 2000 {
+    if vehicle_id < 0 {
         return None;
     }
 
     unsafe {
+        if let Some(lookup) = extended_vehicle_lookup() {
+            if vehicle_id > i32::from(u16::MAX) {
+                return None;
+            }
+
+            let vehicle = lookup(vehicle_id as u16);
+            return if vehicle.is_null() { None } else { Some(&mut *vehicle) };
+        }
+
+        // Without the patch the pool has 2000 elements (the old check allowed 2000 itself).
         let vehicle_id = vehicle_id as usize;
+        if vehicle_id >= 2000 {
+            return None;
+        }
 
         if let Some(vehicles) = vehicle_pool() {
             if vehicles.m_pObject[vehicle_id].is_null() {
